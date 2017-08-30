@@ -11,7 +11,7 @@ namespace WebSocketWrapperLib
         private const string HeaderMsgType = "msg-type";
         private const string HeaderMsgReplyId = "msg-reply-id";
 
-        protected readonly Dictionary<string, object> Headers = new Dictionary<string, object>();
+        protected readonly Dictionary<string, string> Headers = new Dictionary<string, string>();
 
         internal static Message Parse(byte[] bytes)
         {
@@ -24,7 +24,7 @@ namespace WebSocketWrapperLib
             {
                 Array.Copy(bytes, 2 + headerBytesLength, rawData, 0, rawDataLength);
             }
-            var headers = JsonConvert.DeserializeObject<Dictionary<string, object>>(Encoding.UTF8.GetString(headerBytes));
+            var headers = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(headerBytes));
             return new Message(headers, rawData);
         }
 
@@ -43,7 +43,7 @@ namespace WebSocketWrapperLib
         {
         }
 
-        public Message(Dictionary<string, object> headers, byte[] rawData)
+        public Message(Dictionary<string, string> headers, byte[] rawData)
         {
             RawData = rawData;
             Headers = headers;
