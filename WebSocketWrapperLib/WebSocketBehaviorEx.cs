@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 
@@ -30,7 +31,27 @@ namespace WebSocketWrapperLib
                     {
                         Task.Run(() =>
                         {
-                            OnMessage(msg);
+                            try
+                            {
+                                OnMessage(msg);
+                            }
+                            catch (Exception ex)
+                            {
+                                if (msg.RequireReply)
+                                {
+                                    Send(new ErrorMessage(msg.Id)
+                                    {
+                                        Error = new ErrorMessage.ErrorInfo()
+                                        {
+                                            Message = ex.Message
+                                        }
+                                    }.ToBytes());
+                                }
+                                else
+                                {
+                                    throw;
+                                }
+                            }
                         });
                     }
                     else

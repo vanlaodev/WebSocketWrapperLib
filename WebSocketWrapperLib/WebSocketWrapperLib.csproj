@@ -48,8 +48,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ErrorMessage.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RemoteOperationException.cs" />
     <Compile Include="RequestResponseBehaviorCoordinator.cs" />
     <Compile Include="WebSocketBehaviorEx.cs" />
     <Compile Include="WebSocketClient.cs" />

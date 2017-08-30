@@ -42,6 +42,7 @@ namespace WebSocketWrapperLib
 
         internal static T Coordinate<T>(Action send, Message req, int timeout) where T : Message
         {
+            req.RequireReply = true;
             var msgId = req.Id;
             var l = new object();
             lock (Locks)
@@ -58,7 +59,7 @@ namespace WebSocketWrapperLib
                     {
                         if (Responses.ContainsKey(msgId))
                         {
-                            return (T)Activator.CreateInstance(typeof(T), Responses[msgId]);
+                            return HandleResponse<T>(msgId);
                         }
                     }
                     signaled = Monitor.Wait(l, timeout);
@@ -69,7 +70,7 @@ namespace WebSocketWrapperLib
                     {
                         if (Responses.ContainsKey(msgId))
                         {
-                            return (T)Activator.CreateInstance(typeof(T), Responses[msgId]);
+                            return HandleResponse<T>(msgId);
                         }
                     }
                     throw new OperationCanceledException();
@@ -87,6 +88,17 @@ namespace WebSocketWrapperLib
                     Responses.Remove(msgId);
                 }
             }
+        }
+
+        private static T HandleResponse<T>(string msgId) where T : Message
+        {
+            var resp = Responses[msgId];
+            if (resp.Type.Equals(ErrorMessage.MsgType))
+            {
+                var errMsg = new ErrorMessage(resp);
+                throw new RemoteOperationException(errMsg.Error.Message);
+            }
+            return (T) Activator.CreateInstance(typeof (T), resp);
         }
     }
 }

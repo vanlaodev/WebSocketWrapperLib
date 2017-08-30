@@ -30,10 +30,17 @@ namespace Test.Client
                         {
                             break;
                         }
-                        wsClient.Request<AckMessage>(new TextMessage()
+                        try
                         {
-                            Text = input
-                        }, 30000);
+                            wsClient.Request<AckMessage>(new TextMessage()
+                            {
+                                Text = input
+                            }, 30000);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error: " + ex.Message);
+                        }
                     }
                 } while (true);
                 wsClient.PrepareForDisposal();

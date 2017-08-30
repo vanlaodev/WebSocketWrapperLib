@@ -10,8 +10,9 @@ namespace WebSocketWrapperLib
         private const string HeaderMsgId = "msg-id";
         private const string HeaderMsgType = "msg-type";
         private const string HeaderMsgReplyId = "msg-reply-id";
+        private const string HeaderRequireReply = "require-reply";
 
-        protected readonly Dictionary<string, string> Headers = new Dictionary<string, string>();
+        protected readonly Dictionary<string, object> Headers = new Dictionary<string, object>();
 
         internal static Message Parse(byte[] bytes)
         {
@@ -24,7 +25,7 @@ namespace WebSocketWrapperLib
             {
                 Array.Copy(bytes, 2 + headerBytesLength, rawData, 0, rawDataLength);
             }
-            var headers = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(headerBytes));
+            var headers = JsonConvert.DeserializeObject<Dictionary<string, object>>(Encoding.UTF8.GetString(headerBytes));
             return new Message(headers, rawData);
         }
 
@@ -43,7 +44,7 @@ namespace WebSocketWrapperLib
         {
         }
 
-        public Message(Dictionary<string, string> headers, byte[] rawData)
+        public Message(Dictionary<string, object> headers, byte[] rawData)
         {
             RawData = rawData;
             Headers = headers;
@@ -51,20 +52,26 @@ namespace WebSocketWrapperLib
 
         public string Id
         {
-            get { return Headers[HeaderMsgId]; }
+            get { return (string)Headers[HeaderMsgId]; }
             private set { Headers[HeaderMsgId] = value; }
         }
 
         public string Type
         {
-            get { return Headers[HeaderMsgType]; }
+            get { return (string)Headers[HeaderMsgType]; }
             set { Headers[HeaderMsgType] = value; }
         }
 
         public string ReplyId
         {
-            get { return Headers[HeaderMsgReplyId]; }
+            get { return (string)Headers[HeaderMsgReplyId]; }
             set { Headers[HeaderMsgReplyId] = value; }
+        }
+
+        public bool RequireReply
+        {
+            get { return (bool)Headers[HeaderRequireReply]; }
+            set { Headers[HeaderRequireReply] = value; }
         }
 
         public byte[] RawData { get; protected set; }
@@ -87,6 +94,12 @@ namespace WebSocketWrapperLib
             return resultBytes;
         }
 
-        protected virtual string DefaultType { get; }
+        protected virtual string DefaultType
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 }

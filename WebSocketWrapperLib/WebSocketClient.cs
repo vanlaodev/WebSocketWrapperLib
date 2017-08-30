@@ -55,7 +55,27 @@ namespace WebSocketWrapperLib
                         {
                             Task.Run(() =>
                             {
-                                callback(msg);
+                                try
+                                {
+                                    callback(msg);
+                                }
+                                catch (Exception ex)
+                                {
+                                    if (msg.RequireReply)
+                                    {
+                                        Send(new ErrorMessage(msg.Id)
+                                        {
+                                            Error = new ErrorMessage.ErrorInfo()
+                                            {
+                                                Message = ex.Message
+                                            }
+                                        }.ToBytes());
+                                    }
+                                    else
+                                    {
+                                        throw;
+                                    }
+                                }
                             });
                         }
                     }
