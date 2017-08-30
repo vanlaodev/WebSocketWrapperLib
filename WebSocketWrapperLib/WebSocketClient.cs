@@ -87,6 +87,11 @@ namespace WebSocketWrapperLib
             }
         }
 
+        public T Request<T>(Message req) where T : Message
+        {
+            return RequestResponseBehaviorCoordinator.Coordinate<T>(() => Send(req.ToBytes()), req);
+        }
+
         public T Request<T>(Message req, int timeout) where T : Message
         {
             return RequestResponseBehaviorCoordinator.Coordinate<T>(() => Send(req.ToBytes()), req, timeout);

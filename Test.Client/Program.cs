@@ -35,7 +35,7 @@ namespace Test.Client
                             wsClient.Request<AckMessage>(new TextMessage()
                             {
                                 Text = input
-                            }, 30000);
+                            });
                         }
                         catch (Exception ex)
                         {

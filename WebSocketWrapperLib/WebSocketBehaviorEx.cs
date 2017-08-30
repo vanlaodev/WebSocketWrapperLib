@@ -7,6 +7,11 @@ namespace WebSocketWrapperLib
 {
     public abstract class WebSocketBehaviorEx : WebSocketBehavior
     {
+        protected Message Request<T>(Message req) where T : Message
+        {
+            return RequestResponseBehaviorCoordinator.Coordinate<T>(() => Send(req.ToBytes()), req);
+        }
+
         protected Message Request<T>(Message req, int timeout) where T : Message
         {
             return RequestResponseBehaviorCoordinator.Coordinate<T>(() => Send(req.ToBytes()), req, timeout);
