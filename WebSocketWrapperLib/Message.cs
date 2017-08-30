@@ -51,19 +51,19 @@ namespace WebSocketWrapperLib
 
         public string Id
         {
-            get { return (string)Headers[HeaderMsgId]; }
+            get { return Headers[HeaderMsgId]; }
             private set { Headers[HeaderMsgId] = value; }
         }
 
         public string Type
         {
-            get { return (string)Headers[HeaderMsgType]; }
+            get { return Headers[HeaderMsgType]; }
             set { Headers[HeaderMsgType] = value; }
         }
 
         public string ReplyId
         {
-            get { return (string)Headers[HeaderMsgReplyId]; }
+            get { return Headers[HeaderMsgReplyId]; }
             set { Headers[HeaderMsgReplyId] = value; }
         }
 
