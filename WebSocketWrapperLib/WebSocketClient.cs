@@ -99,22 +99,19 @@ namespace WebSocketWrapperLib
 
         private void StopAutoReconnectWorker()
         {
-            Task.Run(() =>
+            lock (_lockForStartStopAutoReconnectWorker)
             {
-                lock (_lockForStartStopAutoReconnectWorker)
+                _autoReconnectWorkerEnabled = false;
+                if (_autoReconnectWorker != null)
                 {
-                    _autoReconnectWorkerEnabled = false;
-                    if (_autoReconnectWorker != null)
+                    lock (_lockForAutoReconnectWorkerInterval)
                     {
-                        lock (_lockForAutoReconnectWorkerInterval)
-                        {
-                            Monitor.Pulse(_lockForAutoReconnectWorkerInterval);
-                        }
-                        _autoReconnectWorker.Join();
-                        _autoReconnectWorker = null;
+                        Monitor.Pulse(_lockForAutoReconnectWorkerInterval);
                     }
+                    _autoReconnectWorker.Join();
+                    _autoReconnectWorker = null;
                 }
-            });
+            }
         }
 
         private void OnOnClose(object sender, CloseEventArgs closeEventArgs)
@@ -143,7 +140,7 @@ namespace WebSocketWrapperLib
                             {
                                 onReconnecting();
                             }
-                            Connect();
+                            ConnectAsync();
                             if (ReadyState != WebSocketState.Open)
                             {
                                 lock (_lockForAutoReconnectWorkerInterval)
