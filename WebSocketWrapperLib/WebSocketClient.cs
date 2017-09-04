@@ -35,66 +35,11 @@ namespace WebSocketWrapperLib
 
         private void OnOnMessage(object sender, MessageEventArgs e)
         {
-            if (e.IsBinary)
+            var callback = MessageReceived;
+            if (callback != null)
             {
-                Message msg = null;
-                try
-                {
-                    msg = Message.Parse(e.RawData);
-                }
-                catch
-                {
-                    // ignored
-                }
-                if (msg != null)
-                {
-                    if (string.IsNullOrEmpty(msg.ReplyId))
-                    {
-                        var callback = MessageReceived;
-                        if (callback != null)
-                        {
-                            Task.Run(() =>
-                            {
-                                try
-                                {
-                                    callback(msg);
-                                }
-                                catch (Exception ex)
-                                {
-                                    if (msg.RequireReply)
-                                    {
-                                        Send(new ErrorMessage(msg.Id)
-                                        {
-                                            Error = new ErrorMessage.ErrorInfo()
-                                            {
-                                                Message = ex.Message
-                                            }
-                                        }.ToBytes());
-                                    }
-                                    else
-                                    {
-                                        throw;
-                                    }
-                                }
-                            });
-                        }
-                    }
-                    else
-                    {
-                        RequestResponseBehaviorCoordinator.OnResponse(msg);
-                    }
-                }
+                Coordinator.OnMessage(this, e, callback);
             }
-        }
-
-        public T Request<T>(Message req) where T : Message
-        {
-            return RequestResponseBehaviorCoordinator.Coordinate<T>(() => Send(req.ToBytes()), req);
-        }
-
-        public T Request<T>(Message req, int timeout) where T : Message
-        {
-            return RequestResponseBehaviorCoordinator.Coordinate<T>(() => Send(req.ToBytes()), req, timeout);
         }
 
         private void OnOnOpen(object sender, EventArgs eventArgs)

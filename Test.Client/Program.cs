@@ -15,6 +15,7 @@ namespace Test.Client
         {
             using (var wsClient = new WebSocketClient("ws://localhost:4579"))
             {
+                var chatServerApi = WebSocketWrapperContext.GenerateRpcContract<IChatServerContract>(wsClient);
                 wsClient.OnOpen += WsClientOnOnOpen;
                 wsClient.OnClose += WsClientOnOnClose;
                 wsClient.OnReconnecting += WsClientOnOnReconnecting;
@@ -32,10 +33,11 @@ namespace Test.Client
                         }
                         try
                         {
-                            wsClient.Request<AckMessage>(new TextMessage()
+                            /*wsClient.Request<AckMessage>(new TextMessage()
                             {
                                 Text = input
-                            });
+                            });*/
+                            chatServerApi.Say(input);
                         }
                         catch (Exception ex)
                         {

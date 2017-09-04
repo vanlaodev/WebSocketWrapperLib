@@ -24,14 +24,19 @@ namespace Test.Server
             {
                 var textMsg = new TextMessage(msg);
                 Send(new AckMessage(textMsg.Id).ToBytes());
-                var sessions = Sessions.Sessions.Where(x => !x.ID.Equals(ID));
-                foreach (var session in sessions)
+                BoardcastExceptsSelf(textMsg.Text);
+            }
+        }
+
+        public void BoardcastExceptsSelf(string text)
+        {
+            var sessions = Sessions.Sessions.Where(x => !x.ID.Equals(ID));
+            foreach (var session in sessions)
+            {
+                session.Context.WebSocket.Send(new TextMessage()
                 {
-                    session.Context.WebSocket.Send(new TextMessage()
-                    {
-                        Text = textMsg.Text
-                    }.ToBytes());
-                }
+                    Text = text
+                }.ToBytes());
             }
         }
     }
