@@ -8,7 +8,7 @@ namespace WebSocketWrapperLib
 {
     public class WebSocketClient : WebSocket
     {
-        private static readonly Dictionary<string, Func<object>> RegisteredRpcContractImpls = new Dictionary<string, Func<object>>();
+        private readonly Dictionary<string, Func<object>> _registeredRpcContractImpls = new Dictionary<string, Func<object>>();
 
         private int _reconnectInterval;
         private Thread _autoReconnectWorker;
@@ -139,9 +139,9 @@ namespace WebSocketWrapperLib
             if (interfaceType.IsInterface && implType.IsClass && !implType.IsAbstract &&
                 interfaceType.IsAssignableFrom(implType))
             {
-                lock (RegisteredRpcContractImpls)
+                lock (_registeredRpcContractImpls)
                 {
-                    RegisteredRpcContractImpls[interfaceType.FullName] = funcImpl;
+                    _registeredRpcContractImpls[interfaceType.FullName] = funcImpl;
                 }
             }
             else
@@ -158,11 +158,11 @@ namespace WebSocketWrapperLib
 
         protected object ResolveRpcContractImpl(string contractType)
         {
-            lock (RegisteredRpcContractImpls)
+            lock (_registeredRpcContractImpls)
             {
-                if (RegisteredRpcContractImpls.ContainsKey(contractType))
+                if (_registeredRpcContractImpls.ContainsKey(contractType))
                 {
-                    return RegisteredRpcContractImpls[contractType];
+                    return _registeredRpcContractImpls[contractType];
                 }
             }
             throw new Exception("Contract implementation not found.");

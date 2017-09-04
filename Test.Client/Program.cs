@@ -15,7 +15,7 @@ namespace Test.Client
         {
             using (var wsClient = new WebSocketClient("ws://localhost:4579"))
             {
-                var chatServerApi = wsClient.Generate<IChatServerContract>();
+                var chatServerApi = wsClient.GenerateContractWrapper<IChatServerContract>();
                 wsClient.OnOpen += WsClientOnOnOpen;
                 wsClient.OnClose += WsClientOnOnClose;
                 wsClient.OnReconnecting += WsClientOnOnReconnecting;

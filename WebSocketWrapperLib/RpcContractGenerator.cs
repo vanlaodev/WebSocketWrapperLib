@@ -44,7 +44,7 @@ namespace {ns}
         private const string MethodReturnStatementTemplate = @"return ({returnType})result;";
         //        private const string MethodReturnStatementTemplate = @"return ({returnType})Convert.ChangeType(result,typeof({returnType}));";
 
-        private static T GenerateGenericConstractWrapper<T>(Func<InvocationInfo, object> callback)
+        private static T GenerateGenericContractWrapper<T>(Func<InvocationInfo, object> callback)
         {
             var contractType = typeof(T);
             if (contractType.IsInterface)
@@ -102,9 +102,9 @@ namespace {ns}
             }
         }
 
-        public static T Generate<T>(this WebSocket ws)
+        public static T GenerateContractWrapper<T>(this WebSocket ws)
         {
-            return GenerateGenericConstractWrapper<T>(info =>
+            return GenerateGenericContractWrapper<T>(info =>
             {
                 var resp = ws.Request<RpcResponseMessage>(new RpcRequestMessage()
                 {
