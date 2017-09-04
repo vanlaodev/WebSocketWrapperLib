@@ -30,7 +30,14 @@ namespace WebSocketWrapperLib
         {
             public string Contract { get; set; }
             public string Method { get; set; }
-            public List<object> Parameters { get; set; }
+            public List<ParameterInfo> Parameters { get; set; }
+        }
+
+        public class ParameterInfo
+        {
+            public string Type { get; set; }
+            public bool IsValueType { get; set; }
+            public object Value { get; set; }
         }
 
         protected override string DefaultType

@@ -15,13 +15,16 @@ namespace Test.Client
         {
             using (var wsClient = new WebSocketClient("ws://localhost:4579"))
             {
-                var chatServerApi = WebSocketWrapperContext.GenerateRpcContract<IChatServerContract>(wsClient);
+                var chatServerApi = wsClient.Generate<IChatServerContract>();
                 wsClient.OnOpen += WsClientOnOnOpen;
                 wsClient.OnClose += WsClientOnOnClose;
                 wsClient.OnReconnecting += WsClientOnOnReconnecting;
                 wsClient.MessageReceived += WsClientOnMessageReceived;
                 Console.WriteLine("Connecting...");
                 wsClient.Connect();
+                chatServerApi.SetUserInfo(new UserInfo() { Username = Guid.NewGuid().ToString("N") });
+                var serverInfo = chatServerApi.GetServerInfo();
+                Console.WriteLine("Server time: {0}", serverInfo.ServerTime);
                 do
                 {
                     var input = Console.ReadLine();

@@ -4,14 +4,17 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using WebSocketSharp;
 
 namespace WebSocketWrapperLib
 {
-    public static class Coordinator
+    public static class RequestResponseBehaviorCoordinator
     {
         private static readonly Dictionary<string, object> Locks = new Dictionary<string, object>();
         private static readonly Dictionary<string, Message> Responses = new Dictionary<string, Message>();
+
+        public static int RequestTimeout = 30 * 1000;
 
         internal static void OnResponse(Message message)
         {
@@ -37,7 +40,7 @@ namespace WebSocketWrapperLib
             }
         }
 
-        internal static bool OnMessage(WebSocket ws, MessageEventArgs e, Action<Message> messageReceived)
+        internal static bool OnMessage(WebSocket ws, MessageEventArgs e, Action<Message> messageReceived, Func<string, object> contractFinder)
         {
             if (e.IsBinary)
             {
@@ -60,7 +63,7 @@ namespace WebSocketWrapperLib
                             {
                                 if (msg.Type.Equals(RpcRequestMessage.MsgType))
                                 {
-                                    HandleRpcRequest(ws, msg);
+                                    HandleRpcRequest(ws, msg, contractFinder);
                                 }
                                 else
                                 {
@@ -96,34 +99,36 @@ namespace WebSocketWrapperLib
             return false;
         }
 
-        private static void HandleRpcRequest(WebSocket ws, Message msg)
+        private static void HandleRpcRequest(WebSocket ws, Message msg, Func<string, object> rpcTarget)
         {
             var rpcRequestMsg = new RpcRequestMessage(msg);
             var req = rpcRequestMsg.Request;
-            var contractImpl = WebSocketWrapperContext.ResolveRpcContractImpl(req.Contract);
+            var contractImpl = rpcTarget(req.Contract);
             var contractImplType = contractImpl.GetType();
             var methodDef = contractImplType.GetMethod(req.Method);
-            var parameters = new object[methodDef.GetParameters().Length];
-            var i = 0;
-            foreach (var p in methodDef.GetParameters())
+            var methodReturnType = methodDef.ReturnType;
+            var parameters = req.Parameters.Select(p =>
             {
-                parameters[i] = Convert.ChangeType(req.Parameters[i], p.ParameterType);
-                ++i;
-            }
+                if (p.IsValueType) return p.Value;
+                var type = Type.GetType(p.Type);
+                return JsonConvert.DeserializeObject((string)p.Value, type);
+            }).ToArray();
             var result = contractImplType
                 .InvokeMember(req.Method, BindingFlags.InvokeMethod, null, contractImpl, parameters);
             ws.Send(new RpcResponseMessage(msg.Id)
             {
                 Response = new RpcResponseMessage.RpcResponse()
                 {
-                    Result = result
+                    Value = methodReturnType.IsValueType ? result : JsonConvert.SerializeObject(result),
+                    Type = methodReturnType.AssemblyQualifiedName,
+                    IsValueType = methodReturnType.IsValueType
                 }
             }.ToBytes());
         }
 
         public static T Request<T>(this WebSocket ws, Message req) where T : Message
         {
-            return Request<T>(ws, req, WebSocketWrapperContext.RequestTimeout);
+            return Request<T>(ws, req, RequestTimeout);
         }
 
         public static T Request<T>(this WebSocket ws, Message req, int timeout) where T : Message
@@ -133,7 +138,7 @@ namespace WebSocketWrapperLib
 
         internal static T Coordinate<T>(Action send, Message req) where T : Message
         {
-            return Coordinate<T>(send, req, WebSocketWrapperContext.RequestTimeout);
+            return Coordinate<T>(send, req, RequestTimeout);
         }
 
         internal static T Coordinate<T>(Action send, Message req, int timeout) where T : Message
@@ -196,7 +201,5 @@ namespace WebSocketWrapperLib
             }
             return (T)Activator.CreateInstance(typeof(T), resp);
         }
-
-
     }
 }

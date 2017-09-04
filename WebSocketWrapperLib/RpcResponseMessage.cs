@@ -27,7 +27,9 @@ namespace WebSocketWrapperLib
 
         public class RpcResponse
         {
-            public object Result { get; set; }
+            public string Type { get; set; }
+            public bool IsValueType { get; set; }
+            public object Value { get; set; }
         }
 
         protected override string DefaultType

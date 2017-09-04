@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using WebSocketSharp;
@@ -7,6 +8,8 @@ namespace WebSocketWrapperLib
 {
     public class WebSocketClient : WebSocket
     {
+        private static readonly Dictionary<string, Func<object>> RegisteredRpcContractImpls = new Dictionary<string, Func<object>>();
+
         private int _reconnectInterval;
         private Thread _autoReconnectWorker;
         private volatile bool _autoReconnectWorkerEnabled;
@@ -38,7 +41,7 @@ namespace WebSocketWrapperLib
             var callback = MessageReceived;
             if (callback != null)
             {
-                Coordinator.OnMessage(this, e, callback);
+                RequestResponseBehaviorCoordinator.OnMessage(this, e, callback, ResolveRpcContractImpl);
             }
         }
 
@@ -121,6 +124,48 @@ namespace WebSocketWrapperLib
         {
             AutoReconnect = false;
             StopAutoReconnectWorker();
+        }
+
+        public void RegisterRpcContractImpl<T>(object impl)
+        {
+            RegisterRpcContractImpl<T>(() => impl);
+        }
+
+        public void RegisterRpcContractImpl<T>(Func<object> funcImpl)
+        {
+            var interfaceType = typeof(T);
+            var impl = funcImpl();
+            var implType = impl.GetType();
+            if (interfaceType.IsInterface && implType.IsClass && !implType.IsAbstract &&
+                interfaceType.IsAssignableFrom(implType))
+            {
+                lock (RegisteredRpcContractImpls)
+                {
+                    RegisteredRpcContractImpls[interfaceType.FullName] = funcImpl;
+                }
+            }
+            else
+            {
+                throw new Exception("Can not register implementation to contract interface.");
+            }
+        }
+
+        protected T ResolveRpcContractImpl<T>()
+        {
+            var type = typeof(T);
+            return (T)ResolveRpcContractImpl(type.FullName);
+        }
+
+        protected object ResolveRpcContractImpl(string contractType)
+        {
+            lock (RegisteredRpcContractImpls)
+            {
+                if (RegisteredRpcContractImpls.ContainsKey(contractType))
+                {
+                    return RegisteredRpcContractImpls[contractType];
+                }
+            }
+            throw new Exception("Contract implementation not found.");
         }
     }
 }

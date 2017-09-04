@@ -3,10 +3,12 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CSharp;
+using Newtonsoft.Json;
+using WebSocketSharp;
 
 namespace WebSocketWrapperLib
 {
-    public static class GenericContractGenerator
+    public static class RpcContractGenerator
     {
         private const string Prefix = @"using System;
 using WebSocketWrapperLib;
@@ -15,9 +17,9 @@ namespace {ns}
 {
     public class {classNm} : {interfaceNm}
     {
-        private readonly Func<GenericContractGenerator.InvocationInfo, object> _wrapped;
+        private readonly Func<RpcContractGenerator.InvocationInfo, object> _wrapped;
 
-        public {classNm}(Func<GenericContractGenerator.InvocationInfo, object> wrapped)
+        public {classNm}(Func<RpcContractGenerator.InvocationInfo, object> wrapped)
         {
             _wrapped = wrapped;
         }
@@ -28,7 +30,7 @@ namespace {ns}
 
         private const string MethodTemplate = @"        public {returnType} {methodName}({methodParams})
         {
-            var info = new GenericContractGenerator.InvocationInfo();
+            var info = new RpcContractGenerator.InvocationInfo();
             info.Contract = ""{interfaceNm}"";
             info.Method = ""{methodName}"";
             {methodSetParamsSection}
@@ -39,9 +41,10 @@ namespace {ns}
         private const string MethodSetParamStatementTemplate =
             @"            info.Parameters.Add({paramVal});";
 
-        private const string MethodReturnStatementTemplate = @"return ({returnType})Convert.ChangeType(result,typeof({returnType}));";
+        private const string MethodReturnStatementTemplate = @"return ({returnType})result;";
+        //        private const string MethodReturnStatementTemplate = @"return ({returnType})Convert.ChangeType(result,typeof({returnType}));";
 
-        public static T Generate<T>(Func<InvocationInfo, object> callback)
+        private static T GenerateGenericConstractWrapper<T>(Func<InvocationInfo, object> callback)
         {
             var contractType = typeof(T);
             if (contractType.IsInterface)
@@ -74,7 +77,7 @@ namespace {ns}
                 var provider = new CSharpCodeProvider();
                 var cp = new CompilerParameters();
                 cp.ReferencedAssemblies.Add(contractType.Assembly.Location);
-                cp.ReferencedAssemblies.Add(typeof(GenericContractGenerator).Assembly.Location);
+                cp.ReferencedAssemblies.Add(typeof(RpcContractGenerator).Assembly.Location);
                 cp.TreatWarningsAsErrors = false;
                 cp.GenerateInMemory = true;
                 var cr = provider.CompileAssemblyFromSource(cp, code);
@@ -97,6 +100,34 @@ namespace {ns}
             {
                 Parameters = new List<object>();
             }
+        }
+
+        public static T Generate<T>(this WebSocket ws)
+        {
+            return GenerateGenericConstractWrapper<T>(info =>
+            {
+                var resp = ws.Request<RpcResponseMessage>(new RpcRequestMessage()
+                {
+                    Request = new RpcRequestMessage.RpcRequest()
+                    {
+                        Contract = info.Contract,
+                        Method = info.Method,
+                        Parameters = info.Parameters.Select(p =>
+                        {
+                            var parameterType = p.GetType();
+                            return new RpcRequestMessage.ParameterInfo()
+                            {
+                                Type = parameterType.AssemblyQualifiedName,
+                                IsValueType = parameterType.IsValueType,
+                                Value = parameterType.IsValueType ? p : JsonConvert.SerializeObject(p)
+                            };
+                        }).ToList()
+                    }
+                });
+                if (resp.Response.IsValueType) return resp.Response.Value;
+                var type = Type.GetType(resp.Response.Type);
+                return JsonConvert.DeserializeObject((string)resp.Response.Value, type);
+            });
         }
     }
 }

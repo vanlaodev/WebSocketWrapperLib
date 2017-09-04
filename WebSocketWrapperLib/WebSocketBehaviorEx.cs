@@ -9,7 +9,7 @@ namespace WebSocketWrapperLib
     {
         protected override void OnMessage(MessageEventArgs e)
         {
-            Coordinator.OnMessage(Context.WebSocket, e, OnMessage);
+            RequestResponseBehaviorCoordinator.OnMessage(Context.WebSocket, e, OnMessage, s => this);
         }
 
         protected virtual void OnMessage(Message msg)
