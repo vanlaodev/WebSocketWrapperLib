@@ -36,10 +36,6 @@ namespace Test.Client
                         }
                         try
                         {
-                            /*wsClient.Request<AckMessage>(new TextMessage()
-                            {
-                                Text = input
-                            });*/
                             chatServerApi.Say(input);
                         }
                         catch (Exception ex)
