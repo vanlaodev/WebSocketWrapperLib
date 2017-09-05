@@ -101,15 +101,27 @@ namespace WebSocketWrapperLib
 
         private static void HandleRpcRequest(WebSocket ws, Message msg, Func<string, object> rpcTarget)
         {
+            var cachedTypes = new Dictionary<string, Type>();
             var rpcRequestMsg = new RpcRequestMessage(msg);
             var req = rpcRequestMsg.Request;
             var contractImpl = rpcTarget(req.Contract);
             var contractImplType = contractImpl.GetType();
-            var methodDef = contractImplType.GetMethod(req.Method, req.Parameters.Select(p => Type.GetType(p.Type)).ToArray());
+            var methodDef = contractImplType.GetMethod(req.Method, req.Parameters.Select(p =>
+            {
+                if (!cachedTypes.ContainsKey(p.Type))
+                {
+                    cachedTypes[p.Type] = Type.GetType(p.Type);
+                }
+                return cachedTypes[p.Type];
+            }).ToArray());
             var methodReturnType = methodDef.ReturnType;
             var parameters = req.Parameters.Select(p =>
             {
-                var type = Type.GetType(p.Type);
+                if (!cachedTypes.ContainsKey(p.Type))
+                {
+                    cachedTypes[p.Type] = Type.GetType(p.Type);
+                }
+                var type = cachedTypes[p.Type];
                 if (type.IsValueType) return Convert.ChangeType(p.Value, type);
                 return JsonConvert.DeserializeObject((string)p.Value, type);
             }).ToArray();
