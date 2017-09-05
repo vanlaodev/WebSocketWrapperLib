@@ -14,11 +14,7 @@ namespace Test.Server
         static void Main(string[] args)
         {
             var wssv = new WebSocketServer(4579);
-            wssv.AddWebSocketService("/", () =>
-            {
-                var chatWebSocketService = new ChatWebSocketService();
-                return chatWebSocketService;
-            });
+            wssv.AddWebSocketService<ChatWebSocketService>("/");
             wssv.Start();
             Console.WriteLine("Started.");
             Console.ReadKey();
