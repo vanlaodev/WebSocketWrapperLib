@@ -25,6 +25,7 @@ namespace Test.Client
                 chatServerApi.SetUserInfo(new UserInfo() { Username = Guid.NewGuid().ToString("N") });
                 var serverInfo = chatServerApi.GetServerInfo();
                 Console.WriteLine("Server time: {0}", serverInfo.ServerTime);
+                Console.WriteLine("{0}+{1}={2}", 123, 456, chatServerApi.Add(123, 456));
                 do
                 {
                     var input = Console.ReadLine();

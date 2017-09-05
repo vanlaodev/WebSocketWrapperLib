@@ -9,5 +9,7 @@ namespace Test.Common
         void SetUserInfo(UserInfo userInfo);
 
         ServerInfo GetServerInfo();
+
+        int Add(int i1, int i2);
     }
 }

@@ -109,8 +109,8 @@ namespace WebSocketWrapperLib
             var methodReturnType = methodDef.ReturnType;
             var parameters = req.Parameters.Select(p =>
             {
-                if (p.IsValueType) return p.Value;
                 var type = Type.GetType(p.Type);
+                if (type.IsValueType) return Convert.ChangeType(p.Value, type);
                 return JsonConvert.DeserializeObject((string)p.Value, type);
             }).ToArray();
             var result = contractImplType
@@ -120,8 +120,7 @@ namespace WebSocketWrapperLib
                 Response = new RpcResponseMessage.RpcResponse()
                 {
                     Value = methodReturnType.IsValueType ? result : JsonConvert.SerializeObject(result),
-                    Type = methodReturnType.AssemblyQualifiedName,
-                    IsValueType = methodReturnType.IsValueType
+                    Type = methodReturnType.AssemblyQualifiedName
                 }
             }.ToBytes());
         }

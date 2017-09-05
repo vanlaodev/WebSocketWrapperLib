@@ -42,7 +42,6 @@ namespace {ns}
             @"            info.Parameters.Add({paramVal});";
 
         private const string MethodReturnStatementTemplate = @"return ({returnType})result;";
-        //        private const string MethodReturnStatementTemplate = @"return ({returnType})Convert.ChangeType(result,typeof({returnType}));";
 
         private static T GenerateGenericContractWrapper<T>(Func<InvocationInfo, object> callback)
         {
@@ -118,14 +117,17 @@ namespace {ns}
                             return new RpcRequestMessage.ParameterInfo()
                             {
                                 Type = parameterType.AssemblyQualifiedName,
-                                IsValueType = parameterType.IsValueType,
                                 Value = parameterType.IsValueType ? p : JsonConvert.SerializeObject(p)
                             };
                         }).ToList()
                     }
                 });
-                if (resp.Response.IsValueType) return resp.Response.Value;
                 var type = Type.GetType(resp.Response.Type);
+                if (type == typeof(void))
+                {
+                    return null;
+                }
+                if (type.IsValueType) return Convert.ChangeType(resp.Response.Value, type);
                 return JsonConvert.DeserializeObject((string)resp.Response.Value, type);
             });
         }

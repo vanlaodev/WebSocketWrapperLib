@@ -36,7 +36,6 @@ namespace WebSocketWrapperLib
         public class ParameterInfo
         {
             public string Type { get; set; }
-            public bool IsValueType { get; set; }
             public object Value { get; set; }
         }
 
