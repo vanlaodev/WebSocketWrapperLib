@@ -27,19 +27,22 @@ namespace Test.Server
             {
                 session.Context.WebSocket.Send(new TextMessage()
                 {
-                    Text = string.Format("{0}: {1}", _userInfo == null ? "Anonymous" : _userInfo.Username, text)
+                    Text = text
                 }.ToBytes());
             }
         }
 
         public void Say(string text)
         {
-            BoardcastExceptsSelf(text);
+            var formattedMsg = string.Format("{0}: {1}", _userInfo == null ? "Anonymous" : _userInfo.Username, text);
+            Console.WriteLine(formattedMsg);
+            BoardcastExceptsSelf(formattedMsg);
         }
 
         public void SetUserInfo(UserInfo userInfo)
         {
             _userInfo = userInfo;
+            Console.WriteLine("User info set.");
         }
 
         public ServerInfo GetServerInfo()
@@ -50,6 +53,11 @@ namespace Test.Server
         public int Add(int i1, int i2)
         {
             return i1 + i2;
+        }
+
+        public int Add(int i1, int i2, int i3)
+        {
+            return i1 + i2 + i3;
         }
     }
 }

@@ -11,5 +11,7 @@ namespace Test.Common
         ServerInfo GetServerInfo();
 
         int Add(int i1, int i2);
+
+        int Add(int i1, int i2, int i3);
     }
 }

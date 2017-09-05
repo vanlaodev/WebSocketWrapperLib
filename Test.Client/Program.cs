@@ -26,6 +26,7 @@ namespace Test.Client
                 var serverInfo = chatServerApi.GetServerInfo();
                 Console.WriteLine("Server time: {0}", serverInfo.ServerTime);
                 Console.WriteLine("{0}+{1}={2}", 123, 456, chatServerApi.Add(123, 456));
+                Console.WriteLine("{0}+{1}+{2}={3}", 123, 456, 789, chatServerApi.Add(123, 456, 789));
                 do
                 {
                     var input = Console.ReadLine();

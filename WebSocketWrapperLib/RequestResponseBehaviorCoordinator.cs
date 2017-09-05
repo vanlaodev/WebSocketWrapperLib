@@ -105,7 +105,7 @@ namespace WebSocketWrapperLib
             var req = rpcRequestMsg.Request;
             var contractImpl = rpcTarget(req.Contract);
             var contractImplType = contractImpl.GetType();
-            var methodDef = contractImplType.GetMethod(req.Method);
+            var methodDef = contractImplType.GetMethod(req.Method, req.Parameters.Select(p => Type.GetType(p.Type)).ToArray());
             var methodReturnType = methodDef.ReturnType;
             var parameters = req.Parameters.Select(p =>
             {
