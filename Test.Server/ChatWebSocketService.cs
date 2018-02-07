@@ -20,7 +20,7 @@ namespace Test.Server
             Console.WriteLine("Client disconnected.");
         }
 
-        private void BoardcastExceptsSelf(string text)
+        private void BroadcastExceptsSelf(string text)
         {
             var sessions = Sessions.Sessions.Where(x => !x.ID.Equals(ID));
             foreach (var session in sessions)
@@ -36,7 +36,7 @@ namespace Test.Server
         {
             var formattedMsg = string.Format("{0}: {1}", _userInfo == null ? "Anonymous" : _userInfo.Username, text);
             Console.WriteLine(formattedMsg);
-            BoardcastExceptsSelf(formattedMsg);
+            BroadcastExceptsSelf(formattedMsg);
         }
 
         public void SetUserInfo(UserInfo userInfo)
