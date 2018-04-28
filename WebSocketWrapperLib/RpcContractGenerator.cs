@@ -3,7 +3,6 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CSharp;
-using Newtonsoft.Json;
 using WebSocketSharp;
 
 namespace WebSocketWrapperLib
@@ -48,7 +47,7 @@ namespace {ns}
             var contractType = typeof(T);
             if (contractType.IsInterface)
             {
-                var ns = "X" + Math.Abs(Guid.NewGuid().GetHashCode());
+                var ns = "X" + Guid.NewGuid().ToString("N");
                 var classNm = "Generated" + contractType.Name;
                 var prefix = Prefix.Replace("{ns}", ns).Replace("{classNm}", classNm).Replace("{interfaceNm}", contractType.FullName);
                 var methods = string.Join(Environment.NewLine + Environment.NewLine,
@@ -117,7 +116,7 @@ namespace {ns}
                             return new RpcRequestMessage.ParameterInfo()
                             {
                                 Type = parameterType.AssemblyQualifiedName,
-                                Value = parameterType.IsValueType ? p : JsonConvert.SerializeObject(p)
+                                Value = parameterType.IsValueType ? p : WebSocketWrapper.ObjectSerializer.Serialize(p)
                             };
                         }).ToList()
                     }
@@ -128,7 +127,7 @@ namespace {ns}
                     return null;
                 }
                 if (type.IsValueType) return Convert.ChangeType(resp.Response.Value, type);
-                return JsonConvert.DeserializeObject((string)resp.Response.Value, type);
+                return WebSocketWrapper.ObjectSerializer.Deserialize((string)resp.Response.Value, type);
             });
         }
     }

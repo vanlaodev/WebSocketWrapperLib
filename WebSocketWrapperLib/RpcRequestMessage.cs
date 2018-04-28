@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Text;
-using Newtonsoft.Json;
 
 namespace WebSocketWrapperLib
 {
@@ -22,8 +21,8 @@ namespace WebSocketWrapperLib
 
         public RpcRequest Request
         {
-            get { return JsonConvert.DeserializeObject<RpcRequest>(Encoding.UTF8.GetString(RawData)); }
-            set { RawData = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value)); }
+            get { return WebSocketWrapper.ObjectSerializer.Deserialize<RpcRequest>(Encoding.UTF8.GetString(RawData)); }
+            set { RawData = Encoding.UTF8.GetBytes(WebSocketWrapper.ObjectSerializer.Serialize(value)); }
         }
 
         public class RpcRequest

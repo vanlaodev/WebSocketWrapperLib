@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using WebSocketSharp;
 
 namespace WebSocketWrapperLib
@@ -57,8 +56,8 @@ namespace WebSocketWrapperLib
                 {
                     if (string.IsNullOrEmpty(msg.ReplyId))
                     {
-                        Task.Run(() =>
-                        {
+/*                        Task.Run(() =>
+                        {*/
                             try
                             {
                                 if (msg.Type.Equals(RpcRequestMessage.MsgType))
@@ -87,7 +86,7 @@ namespace WebSocketWrapperLib
                                     throw;
                                 }
                             }
-                        });
+//                        });
                     }
                     else
                     {
@@ -123,7 +122,7 @@ namespace WebSocketWrapperLib
                 }
                 var type = cachedTypes[p.Type];
                 if (type.IsValueType) return Convert.ChangeType(p.Value, type);
-                return JsonConvert.DeserializeObject((string)p.Value, type);
+                return WebSocketWrapper.ObjectSerializer.Deserialize((string)p.Value, type);
             }).ToArray();
             var result = contractImplType
                 .InvokeMember(req.Method, BindingFlags.InvokeMethod, null, contractImpl, parameters);
@@ -131,7 +130,7 @@ namespace WebSocketWrapperLib
             {
                 Response = new RpcResponseMessage.RpcResponse()
                 {
-                    Value = methodReturnType.IsValueType ? result : JsonConvert.SerializeObject(result),
+                    Value = methodReturnType.IsValueType ? result : WebSocketWrapper.ObjectSerializer.Serialize(result),
                     Type = methodReturnType.AssemblyQualifiedName
                 }
             }.ToBytes());

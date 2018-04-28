@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Test.Common;
 using WebSocketSharp;
@@ -11,22 +8,20 @@ namespace Test.Client
 {
     class Program
     {
+        private static IChatServerContract _chatServerApi;
+
         static void Main(string[] args)
         {
+            WebSocketWrapper.Setup(new JsonObjectSerializer());
             using (var wsClient = new WebSocketClient("ws://localhost:4579"))
             {
-                var chatServerApi = wsClient.GenerateContractWrapper<IChatServerContract>();
+                _chatServerApi = wsClient.GenerateContractWrapper<IChatServerContract>();
                 wsClient.OnOpen += WsClientOnOnOpen;
                 wsClient.OnClose += WsClientOnOnClose;
                 wsClient.OnReconnecting += WsClientOnOnReconnecting;
                 wsClient.MessageReceived += WsClientOnMessageReceived;
                 Console.WriteLine("Connecting...");
                 wsClient.Connect();
-                chatServerApi.SetUserInfo(new UserInfo() { Username = Guid.NewGuid().ToString("N") });
-                var serverInfo = chatServerApi.GetServerInfo();
-                Console.WriteLine("Server time: {0}", serverInfo.ServerTime);
-                Console.WriteLine("{0}+{1}={2}", 123, 456, chatServerApi.Add(123, 456));
-                Console.WriteLine("{0}+{1}+{2}={3}", 123, 456, 789, chatServerApi.Add(123, 456, 789));
                 do
                 {
                     var input = Console.ReadLine();
@@ -38,7 +33,7 @@ namespace Test.Client
                         }
                         try
                         {
-                            chatServerApi.Say(input);
+                            _chatServerApi.Say(input);
                         }
                         catch (Exception ex)
                         {
@@ -48,7 +43,7 @@ namespace Test.Client
                 } while (true);
                 wsClient.PrepareForDisposal();
             }
-            Console.ReadKey();
+//            Console.ReadKey();
         }
 
         private static void WsClientOnMessageReceived(Message message)
@@ -73,6 +68,15 @@ namespace Test.Client
         private static void WsClientOnOnOpen(object sender, EventArgs eventArgs)
         {
             Console.WriteLine("Connected.");
+
+            Task.Run(() =>
+            {
+                _chatServerApi.SetUserInfo(new UserInfo() { Username = Guid.NewGuid().ToString("N") });
+                var serverInfo = _chatServerApi.GetServerInfo();
+                Console.WriteLine("Server time: {0}", serverInfo.ServerTime);
+                Console.WriteLine("{0}+{1}={2}", 123, 456, _chatServerApi.Add(123, 456));
+                Console.WriteLine("{0}+{1}+{2}={3}", 123, 456, 789, _chatServerApi.Add(123, 456, 789));
+            });
         }
     }
 }

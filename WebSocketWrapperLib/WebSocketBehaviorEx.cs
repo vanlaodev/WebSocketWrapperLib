@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using WebSocketSharp;
+﻿using WebSocketSharp;
 using WebSocketSharp.Server;
 
 namespace WebSocketWrapperLib
@@ -14,7 +12,7 @@ namespace WebSocketWrapperLib
 
         protected virtual void OnMessage(Message msg)
         {
-
+            
         }
     }
 }

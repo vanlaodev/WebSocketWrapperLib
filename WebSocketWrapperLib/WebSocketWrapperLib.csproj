@@ -30,10 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -49,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ErrorMessage.cs" />
+    <Compile Include="IObjectSerializer.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteOperationException.cs" />
@@ -58,6 +55,7 @@
     <Compile Include="RpcResponseMessage.cs" />
     <Compile Include="WebSocketBehaviorEx.cs" />
     <Compile Include="WebSocketClient.cs" />
+    <Compile Include="WebSocketWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

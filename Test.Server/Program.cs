@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Test.Common;
 using WebSocketSharp.Server;
 using WebSocketWrapperLib;
@@ -13,6 +9,7 @@ namespace Test.Server
     {
         static void Main(string[] args)
         {
+            WebSocketWrapper.Setup(new JsonObjectSerializer());
             var wssv = new WebSocketServer(4579);
             wssv.AddWebSocketService<ChatWebSocketService>("/");
             wssv.Start();

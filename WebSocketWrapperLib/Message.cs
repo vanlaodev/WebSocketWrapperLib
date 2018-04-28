@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Newtonsoft.Json;
 
 namespace WebSocketWrapperLib
 {
@@ -20,12 +19,13 @@ namespace WebSocketWrapperLib
             var headerBytes = new byte[headerBytesLength];
             Array.Copy(bytes, 2, headerBytes, 0, headerBytesLength);
             var rawDataLength = bytes.Length - 2 - headerBytesLength;
-            var rawData = new byte[rawDataLength];
+            byte[] rawData = null;
             if (rawDataLength > 0)
             {
+                rawData = new byte[rawDataLength];
                 Array.Copy(bytes, 2 + headerBytesLength, rawData, 0, rawDataLength);
             }
-            var headers = JsonConvert.DeserializeObject<Dictionary<string, object>>(Encoding.UTF8.GetString(headerBytes));
+            var headers = WebSocketWrapper.ObjectSerializer.Deserialize<Dictionary<string, object>>(Encoding.UTF8.GetString(headerBytes));
             return new Message(headers, rawData);
         }
 
@@ -78,7 +78,7 @@ namespace WebSocketWrapperLib
 
         public byte[] ToBytes()
         {
-            var headerBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(Headers));
+            var headerBytes = Encoding.UTF8.GetBytes(WebSocketWrapper.ObjectSerializer.Serialize(Headers));
             var headerBytesLength = headerBytes.Length;
             var headerBytesLengthBytes = new byte[2];
             headerBytesLengthBytes[0] = (byte)(headerBytesLength >> 8 & 0xff);

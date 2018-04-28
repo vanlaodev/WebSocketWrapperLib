@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Newtonsoft.Json;
 
 namespace WebSocketWrapperLib
 {
@@ -21,8 +20,8 @@ namespace WebSocketWrapperLib
 
         public ErrorInfo Error
         {
-            get { return JsonConvert.DeserializeObject<ErrorInfo>(Encoding.UTF8.GetString(RawData)); }
-            set { RawData = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value)); }
+            get { return WebSocketWrapper.ObjectSerializer.Deserialize<ErrorInfo>(Encoding.UTF8.GetString(RawData)); }
+            set { RawData = Encoding.UTF8.GetBytes(WebSocketWrapper.ObjectSerializer.Serialize(value)); }
         }
 
         public class ErrorInfo
