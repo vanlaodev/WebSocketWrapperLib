@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using WebSocketSharp;
 
@@ -125,22 +126,21 @@ namespace WebSocketWrapperLib
             StopAutoReconnectWorker();
         }
 
-        public void RegisterRpcContractImpl<T>(object impl)
+        public void RegisterRpcContractImpl<TInterface, TImpl>(TImpl impl) where TImpl : TInterface
         {
-            RegisterRpcContractImpl<T>(() => impl);
+            RegisterRpcContractImpl<TInterface, TImpl>(() => impl);
         }
 
-        public void RegisterRpcContractImpl<T>(Func<object> funcImpl)
+        public void RegisterRpcContractImpl<TInterface, TImpl>(Func<TImpl> funcImpl) where TImpl : TInterface
         {
-            var interfaceType = typeof(T);
-            var impl = funcImpl();
-            var implType = impl.GetType();
+            var implType = typeof(TImpl);
+            var interfaceType = typeof(TInterface);
             if (interfaceType.IsInterface && implType.IsClass && !implType.IsAbstract &&
                 interfaceType.IsAssignableFrom(implType))
             {
                 lock (_registeredRpcContractImpls)
                 {
-                    _registeredRpcContractImpls[interfaceType.FullName] = funcImpl;
+                    _registeredRpcContractImpls[interfaceType.FullName] = () => { return funcImpl(); };
                 }
             }
             else
@@ -161,7 +161,8 @@ namespace WebSocketWrapperLib
             {
                 if (_registeredRpcContractImpls.ContainsKey(contractType))
                 {
-                    return _registeredRpcContractImpls[contractType];
+                    var funcImpl = _registeredRpcContractImpls[contractType];
+                    return funcImpl();
                 }
             }
             throw new Exception("Contract implementation not found.");

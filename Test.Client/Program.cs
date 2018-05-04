@@ -15,13 +15,14 @@ namespace Test.Client
             WebSocketWrapper.Setup(new JsonObjectSerializer());
             using (var wsClient = new WebSocketClient("ws://localhost:4579"))
             {
+                wsClient.RegisterRpcContractImpl<IClientContract, ClientContractImpl>(new ClientContractImpl());
                 _chatServerApi = wsClient.GenerateContractWrapper<IChatServerContract>();
                 wsClient.OnOpen += WsClientOnOnOpen;
                 wsClient.OnClose += WsClientOnOnClose;
                 wsClient.OnReconnecting += WsClientOnOnReconnecting;
                 wsClient.MessageReceived += WsClientOnMessageReceived;
                 Console.WriteLine("Connecting...");
-                wsClient.Connect();
+                wsClient.ConnectAsync();
                 do
                 {
                     var input = Console.ReadLine();
@@ -43,7 +44,7 @@ namespace Test.Client
                 } while (true);
                 wsClient.PrepareForDisposal();
             }
-//            Console.ReadKey();
+            //            Console.ReadKey();
         }
 
         private static void WsClientOnMessageReceived(Message message)

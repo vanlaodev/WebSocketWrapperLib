@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Test.Common;
 using WebSocketSharp;
 using WebSocketWrapperLib;
@@ -9,10 +10,24 @@ namespace Test.Server
     public class ChatWebSocketService : WebSocketBehaviorEx, IChatServerContract
     {
         private UserInfo _userInfo;
+        private IClientContract _clientContract;
 
         protected override void OnOpen()
         {
             Console.WriteLine("Client connected.");
+            _clientContract = Context.WebSocket.GenerateContractWrapper<IClientContract>();
+            Task.Run(() =>
+            {
+                try
+                {
+                    var clientTime = _clientContract.GetClientTime();
+                    Console.WriteLine("Client time: {0}", clientTime);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
+            });
         }
 
         protected override void OnClose(CloseEventArgs e)
