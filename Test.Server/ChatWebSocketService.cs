@@ -18,15 +18,8 @@ namespace Test.Server
             _clientContract = Context.WebSocket.GenerateContractWrapper<IClientContract>();
             Task.Run(() =>
             {
-                try
-                {
-                    var clientTime = _clientContract.GetClientTime();
-                    Console.WriteLine("Client time: {0}", clientTime);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex);
-                }
+                var clientTime = _clientContract.GetClientTime();
+                Console.WriteLine("Client time: {0}", clientTime);
             });
         }
 
