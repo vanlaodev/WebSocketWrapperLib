@@ -39,10 +39,7 @@ namespace WebSocketWrapperLib
         private void OnOnMessage(object sender, MessageEventArgs e)
         {
             var callback = MessageReceived;
-            if (callback != null)
-            {
-                RequestResponseBehaviorCoordinator.OnMessage(this, e, callback, ResolveRpcContractImpl);
-            }
+            RequestResponseBehaviorCoordinator.OnMessage(this, e, callback, ResolveRpcContractImpl);
         }
 
         private void OnOnOpen(object sender, EventArgs eventArgs)

@@ -2,6 +2,7 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.CSharp;
 using WebSocketSharp;
 
@@ -51,26 +52,26 @@ namespace {ns}
                 var classNm = "Generated" + contractType.Name;
                 var prefix = Prefix.Replace("{ns}", ns).Replace("{classNm}", classNm).Replace("{interfaceNm}", contractType.FullName);
                 var methods = string.Join(Environment.NewLine + Environment.NewLine,
-                    contractType.GetMethods().Select(m =>
-                    {
-                        var methodParams = string.Join(",",
-                            m.GetParameters().Select(p => string.Format("{0} {1}", p.ParameterType.FullName, p.Name)));
-                        var methodSetParamsSection = string.Join(Environment.NewLine,
-                            m.GetParameters()
-                                .Select(
-                                    p =>
-                                        MethodSetParamStatementTemplate.Replace("{paramVal}", p.Name)));
-                        var methodReturnStatement = typeof(void) == m.ReturnType
-                            ? ""
-                            : MethodReturnStatementTemplate.Replace("{returnType}", m.ReturnType.FullName);
-                        return MethodTemplate.Replace("{returnType}", m.ReturnType.FullName)
-                            .Replace("{methodName}", m.Name)
-                            .Replace("{methodParams}", methodParams)
-                            .Replace("{interfaceNm}", contractType.FullName)
-                            .Replace("{methodSetParamsSection}", methodSetParamsSection)
-                            .Replace("{methodReturnStatement}", methodReturnStatement)
-                            .Replace("System.Void", "void");
-                    }));
+                    contractType.GetMethods().Concat(contractType.GetInterfaces().SelectMany(i => i.GetMethods())).Select(m =>
+                      {
+                          var methodParams = string.Join(",",
+                              m.GetParameters().Select(p => string.Format("{0} {1}", p.ParameterType.FullName, p.Name)));
+                          var methodSetParamsSection = string.Join(Environment.NewLine,
+                              m.GetParameters()
+                                  .Select(
+                                      p =>
+                                          MethodSetParamStatementTemplate.Replace("{paramVal}", p.Name)));
+                          var methodReturnStatement = typeof(void) == m.ReturnType
+                              ? ""
+                              : MethodReturnStatementTemplate.Replace("{returnType}", m.ReturnType.FullName);
+                          return MethodTemplate.Replace("{returnType}", m.ReturnType.FullName)
+                              .Replace("{methodName}", m.Name)
+                              .Replace("{methodParams}", methodParams)
+                              .Replace("{interfaceNm}", contractType.FullName)
+                              .Replace("{methodSetParamsSection}", methodSetParamsSection)
+                              .Replace("{methodReturnStatement}", methodReturnStatement)
+                              .Replace("System.Void", "void");
+                      }));
                 var code = prefix + methods + Suffix;
                 var provider = new CSharpCodeProvider();
                 var cp = new CompilerParameters();

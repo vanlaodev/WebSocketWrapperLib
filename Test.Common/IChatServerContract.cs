@@ -1,8 +1,9 @@
 ﻿using System;
+using WebSocketWrapperLib;
 
 namespace Test.Common
 {
-    public interface IChatServerContract
+    public interface IChatServerContract : IPubSubContract
     {
         void Say(string text);
 

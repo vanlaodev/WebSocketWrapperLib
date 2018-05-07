@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Test.Common;
 using WebSocketSharp;
@@ -34,6 +36,7 @@ namespace Test.Client
                         }
                         try
                         {
+                            _chatServerApi.UnsubscribeAll();
                             _chatServerApi.Say(input);
                         }
                         catch (Exception ex)
@@ -53,6 +56,11 @@ namespace Test.Client
             {
                 var textMsg = new TextMessage(message);
                 Console.WriteLine(textMsg.Text);
+            }
+            else if (message.Type.Equals(PublishMessage.MsgType))
+            {
+                var pubMsg = new PublishMessage(message);
+                Console.WriteLine("Topic: {0} | Data: {1}", pubMsg.Topic, Encoding.UTF8.GetString(pubMsg.RawData));
             }
         }
 
@@ -77,6 +85,7 @@ namespace Test.Client
                 Console.WriteLine("Server time: {0}", serverInfo.ServerTime);
                 Console.WriteLine("{0}+{1}={2}", 123, 456, _chatServerApi.Add(123, 456));
                 Console.WriteLine("{0}+{1}+{2}={3}", 123, 456, 789, _chatServerApi.Add(123, 456, 789));
+                _chatServerApi.Subscribe(new[] { "Test" });
             });
         }
     }

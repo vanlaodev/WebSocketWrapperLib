@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Test.Common;
 using WebSocketSharp;
@@ -11,9 +13,38 @@ namespace Test.Server
     {
         private UserInfo _userInfo;
         private IClientContract _clientContract;
+        private bool _pushingTime;
+        private Thread _pushTimeThread;
+
+        private void StartPushTimeIfNeed()
+        {
+            if (_pushTimeThread != null) return;
+            _pushingTime = true;
+            _pushTimeThread = new Thread(() =>
+            {
+                while (_pushingTime)
+                {
+                    InternalPublish("Test", Encoding.UTF8.GetBytes(DateTime.Now.ToString()));
+                    Thread.Sleep(1000);
+                }
+            });
+            _pushTimeThread.Start();
+        }
+
+        private void StopPushTime()
+        {
+            if (_pushTimeThread == null) return;
+            _pushingTime = false;
+            _pushTimeThread.Join();
+            _pushTimeThread = null;
+        }
 
         protected override void OnOpen()
         {
+            base.OnOpen();
+
+            StartPushTimeIfNeed();
+
             Console.WriteLine("Client connected.");
             _clientContract = Context.WebSocket.GenerateContractWrapper<IClientContract>();
             Task.Run(() =>
@@ -26,6 +57,13 @@ namespace Test.Server
         protected override void OnClose(CloseEventArgs e)
         {
             Console.WriteLine("Client disconnected.");
+
+            if (Sessions.Count == 0)
+            {
+                StopPushTime();
+            }
+
+            base.OnClose(e);
         }
 
         private void BroadcastExceptsSelf(string text)

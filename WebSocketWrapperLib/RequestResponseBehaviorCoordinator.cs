@@ -66,7 +66,10 @@ namespace WebSocketWrapperLib
                                 }
                                 else
                                 {
-                                    messageReceived(msg);
+                                    if (messageReceived != null)
+                                    {
+                                        messageReceived(msg);
+                                    }
                                 }
                             }
                             catch (Exception ex)
