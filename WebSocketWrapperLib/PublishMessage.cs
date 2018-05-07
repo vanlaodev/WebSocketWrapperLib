@@ -4,7 +4,7 @@ namespace WebSocketWrapperLib
 {
     public class PublishMessage : Message
     {
-        private const string HeaderRequireReply = "topic";
+        private const string HeaderTopic = "topic";
         public const string MsgType = "Publish";
 
         public PublishMessage(string topic, byte[] data)
@@ -20,8 +20,8 @@ namespace WebSocketWrapperLib
 
         public string Topic
         {
-            get { return (string)Headers[HeaderRequireReply]; }
-            set { Headers[HeaderRequireReply] = value; }
+            get { return (string)Headers[HeaderTopic]; }
+            set { Headers[HeaderTopic] = value; }
         }
 
         protected override string DefaultType

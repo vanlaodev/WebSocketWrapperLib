@@ -13,8 +13,8 @@ namespace Test.Server
     {
         private UserInfo _userInfo;
         private IClientContract _clientContract;
-        private bool _pushingTime;
-        private Thread _pushTimeThread;
+        private static bool _pushingTime;
+        private static Thread _pushTimeThread;
 
         private void StartPushTimeIfNeed()
         {
