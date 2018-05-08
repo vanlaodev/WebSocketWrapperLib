@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using WebSocketWrapperLib;
 
 namespace Test.Common
@@ -14,5 +15,7 @@ namespace Test.Common
         int Add(int i1, int i2);
 
         int Add(int i1, int i2, int i3);
+
+        void Say(SayMultipleLinesModel model);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -86,6 +87,7 @@ namespace Test.Client
                 Console.WriteLine("{0}+{1}={2}", 123, 456, _chatServerApi.Add(123, 456));
                 Console.WriteLine("{0}+{1}+{2}={3}", 123, 456, 789, _chatServerApi.Add(123, 456, 789));
                 _chatServerApi.Subscribe(new[] { "Test" });
+                _chatServerApi.Say(new SayMultipleLinesModel() { Lines = new List<string>() { "Hello", "World", "!" } });
             });
         }
     }

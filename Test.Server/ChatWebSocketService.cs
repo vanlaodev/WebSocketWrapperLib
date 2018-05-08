@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -104,6 +105,15 @@ namespace Test.Server
         public int Add(int i1, int i2, int i3)
         {
             return i1 + i2 + i3;
+        }
+
+        public void Say(SayMultipleLinesModel model)
+        {
+            var formattedMsg = string.Join(Environment.NewLine,
+                (from l in model.Lines
+                 select string.Format("{0}: {1}", _userInfo == null ? "Anonymous" : _userInfo.Username, l)));
+            Console.WriteLine(formattedMsg);
+            BroadcastExceptsSelf(formattedMsg);
         }
     }
 }
