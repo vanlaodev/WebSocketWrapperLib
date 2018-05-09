@@ -13,7 +13,7 @@ namespace WebSocketWrapperLib
         private static readonly Dictionary<string, object> Locks = new Dictionary<string, object>();
         private static readonly Dictionary<string, Message> Responses = new Dictionary<string, Message>();
 
-        public static int RequestTimeout = 30 * 1000;
+        public static int RequestTimeout = 60 * 1000;
 
         internal static void OnResponse(Message message)
         {

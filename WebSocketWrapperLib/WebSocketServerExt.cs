@@ -10,7 +10,7 @@ namespace WebSocketWrapperLib
         {
             foreach (
                 var host in
-                    wssv.WebSocketServices.Hosts.Where(x => x.Type == typeof(T)))
+                    wssv.WebSocketServices.Hosts.Where(x => x.BehaviorType == typeof(T)))
             {
                 return
                     (T)host.Sessions.Sessions.SingleOrDefault(

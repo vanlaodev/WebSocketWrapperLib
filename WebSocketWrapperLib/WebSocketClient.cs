@@ -28,7 +28,7 @@ namespace WebSocketWrapperLib
             AutoReconnect = true;
             ReconnectBackOffMultiplier = 2;
             InitialReconnectInterval = 5 * 1000;
-            MaxReconnectInterval = 2 * 60 * 1000;
+            MaxReconnectInterval = 3 * 60 * 1000;
         }
 
         public bool AutoReconnect { get; set; }
