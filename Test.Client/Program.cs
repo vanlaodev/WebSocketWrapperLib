@@ -19,7 +19,7 @@ namespace Test.Client
             using (var wsClient = new WebSocketClient("ws://localhost:4579"))
             {
                 wsClient.RegisterRpcContractImpl<IClientContract, ClientContractImpl>(new ClientContractImpl());
-                _chatServerApi = wsClient.GenerateContractWrapper<IChatServerContract>();
+                _chatServerApi = wsClient.GenerateContractWrapper<IChatServerContract>(2 * 60 * 1000);
                 wsClient.OnOpen += WsClientOnOnOpen;
                 wsClient.OnClose += WsClientOnOnClose;
                 wsClient.OnReconnecting += WsClientOnOnReconnecting;

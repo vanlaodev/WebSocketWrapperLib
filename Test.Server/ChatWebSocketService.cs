@@ -47,7 +47,7 @@ namespace Test.Server
             StartPushTimeIfNeed();
 
             Console.WriteLine("Client connected.");
-            _clientContract = Context.WebSocket.GenerateContractWrapper<IClientContract>();
+            _clientContract = Context.WebSocket.GenerateContractWrapper<IClientContract>(2 * 60 * 1000);
             Task.Run(() =>
             {
                 var clientTime = _clientContract.GetClientTime();

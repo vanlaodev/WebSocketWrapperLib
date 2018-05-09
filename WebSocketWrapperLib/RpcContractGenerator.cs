@@ -101,7 +101,7 @@ namespace {ns}
             }
         }
 
-        public static T GenerateContractWrapper<T>(this WebSocket ws)
+        public static T GenerateContractWrapper<T>(this WebSocket ws, int defaultTimeout)
         {
             return GenerateGenericContractWrapper<T>(info =>
             {
@@ -121,7 +121,7 @@ namespace {ns}
                             };
                         }).ToList()
                     }
-                });
+                }, defaultTimeout);
                 var type = Type.GetType(resp.Response.Type);
                 if (type == typeof(void))
                 {

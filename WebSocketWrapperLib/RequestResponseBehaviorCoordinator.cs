@@ -8,12 +8,10 @@ using WebSocketSharp;
 
 namespace WebSocketWrapperLib
 {
-    public static class RequestResponseBehaviorCoordinator
+    internal static class RequestResponseBehaviorCoordinator
     {
         private static readonly Dictionary<string, object> Locks = new Dictionary<string, object>();
         private static readonly Dictionary<string, Message> Responses = new Dictionary<string, Message>();
-
-        public static int RequestTimeout = 60 * 1000;
 
         internal static void OnResponse(Message message)
         {
@@ -139,22 +137,12 @@ namespace WebSocketWrapperLib
             }.ToBytes());
         }
 
-        public static T Request<T>(this WebSocket ws, Message req) where T : Message
-        {
-            return Request<T>(ws, req, RequestTimeout);
-        }
-
         public static T Request<T>(this WebSocket ws, Message req, int timeout) where T : Message
         {
             return Coordinate<T>(() => ws.Send(req.ToBytes()), req, timeout);
         }
 
-        internal static T Coordinate<T>(Action send, Message req) where T : Message
-        {
-            return Coordinate<T>(send, req, RequestTimeout);
-        }
-
-        internal static T Coordinate<T>(Action send, Message req, int timeout) where T : Message
+        private static T Coordinate<T>(Action send, Message req, int timeout) where T : Message
         {
             req.RequireReply = true;
             var msgId = req.Id;
