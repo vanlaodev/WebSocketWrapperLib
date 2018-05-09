@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using WebSocketSharp;
 using WebSocketSharp.Server;
@@ -9,6 +10,8 @@ namespace WebSocketWrapperLib
     public abstract class WebSocketBehaviorEx : WebSocketBehavior, IPubSubContract
     {
         private static readonly Dictionary<string, List<string>> SubTopicsRegistry = new Dictionary<string, List<string>>();
+
+        public int ThreadId { get; private set; }
 
         protected override void OnMessage(MessageEventArgs e)
         {
@@ -23,6 +26,8 @@ namespace WebSocketWrapperLib
         protected override void OnOpen()
         {
             base.OnOpen();
+
+            ThreadId = Thread.CurrentThread.ManagedThreadId;
 
             lock (SubTopicsRegistry)
             {

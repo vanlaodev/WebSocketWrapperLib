@@ -57,6 +57,7 @@
     <Compile Include="RpcResponseMessage.cs" />
     <Compile Include="WebSocketBehaviorEx.cs" />
     <Compile Include="WebSocketClient.cs" />
+    <Compile Include="WebSocketServerExt.cs" />
     <Compile Include="WebSocketWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
