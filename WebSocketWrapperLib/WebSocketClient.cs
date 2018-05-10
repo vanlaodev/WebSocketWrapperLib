@@ -92,36 +92,29 @@ namespace WebSocketWrapperLib
                             {
                                 onReconnecting();
                             }
-                            try
+                            Connect();
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error("Error occured while reconnecting: " + ex.Message);
+                        }
+                        if (ReadyState != WebSocketState.Open)
+                        {
+                            lock (_lockForAutoReconnectWorkerInterval)
                             {
-                                Connect();
-                            }
-                            catch
-                            {
-                                // ignored
-                            }
-                            if (ReadyState != WebSocketState.Open)
-                            {
-                                lock (_lockForAutoReconnectWorkerInterval)
+                                if (_autoReconnectWorkerEnabled)
                                 {
-                                    if (_autoReconnectWorkerEnabled)
+                                    Monitor.Wait(_lockForAutoReconnectWorkerInterval, _reconnectInterval);
+                                    if (_reconnectInterval * ReconnectBackOffMultiplier < MaxReconnectInterval)
                                     {
-                                        Monitor.Wait(_lockForAutoReconnectWorkerInterval, _reconnectInterval);
-                                        if (_reconnectInterval * ReconnectBackOffMultiplier < MaxReconnectInterval)
-                                        {
-                                            _reconnectInterval *= ReconnectBackOffMultiplier;
-                                        }
-                                        else
-                                        {
-                                            _reconnectInterval = MaxReconnectInterval;
-                                        }
+                                        _reconnectInterval *= ReconnectBackOffMultiplier;
+                                    }
+                                    else
+                                    {
+                                        _reconnectInterval = MaxReconnectInterval;
                                     }
                                 }
                             }
-                        }
-                        catch
-                        {
-                            // ignored
                         }
                     }
                     _autoReconnectWorkerEnabled = false;
