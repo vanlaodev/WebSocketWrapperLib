@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,7 +11,18 @@ namespace WebSocketWrapperLib
 {
     public abstract class WebSocketBehaviorEx : WebSocketBehavior, IPubSubContract
     {
-        private static readonly Dictionary<string, List<string>> SubTopicsRegistry = new Dictionary<string, List<string>>();
+        private readonly List<string> _subscribedTopics = new List<string>();
+
+        public IReadOnlyList<string> SubscribedTopics
+        {
+            get
+            {
+                lock (_subscribedTopics)
+                {
+                    return new ReadOnlyCollection<string>(_subscribedTopics);
+                }
+            }
+        }
 
         protected override void OnMessage(MessageEventArgs e)
         {
@@ -21,43 +34,22 @@ namespace WebSocketWrapperLib
 
         }
 
-        protected override void OnOpen()
-        {
-            base.OnOpen();
-
-            lock (SubTopicsRegistry)
-            {
-                SubTopicsRegistry.Add(ID, new List<string>());
-            }
-        }
-
         protected override void OnClose(CloseEventArgs e)
         {
-            lock (SubTopicsRegistry)
-            {
-                SubTopicsRegistry.Remove(ID);
-            }
+            UnsubscribeAll();
 
             base.OnClose(e);
         }
 
         public void Subscribe(string[] topics)
         {
-            lock (SubTopicsRegistry)
+            lock (_subscribedTopics)
             {
-                var pair = SubTopicsRegistry.SingleOrDefault(x => x.Key.Equals(ID));
-                if (pair.Equals(default(KeyValuePair<string, List<string>>)))
+                foreach (var t in topics)
                 {
-                    SubTopicsRegistry.Add(ID, new List<string>(topics));
-                }
-                else
-                {
-                    foreach (var t in topics)
+                    if (!_subscribedTopics.Any(x => x.Equals(t)))
                     {
-                        if (!pair.Value.Any(x => x.Equals(t)))
-                        {
-                            pair.Value.Add(t);
-                        }
+                        _subscribedTopics.Add(t);
                     }
                 }
             }
@@ -65,17 +57,13 @@ namespace WebSocketWrapperLib
 
         public void Unsubscribe(string[] topics)
         {
-            lock (SubTopicsRegistry)
+            lock (_subscribedTopics)
             {
-                var pair = SubTopicsRegistry.SingleOrDefault(x => x.Key.Equals(ID));
-                if (!pair.Equals(default(KeyValuePair<string, List<string>>)))
+                foreach (var t in topics)
                 {
-                    foreach (var t in topics)
+                    if (_subscribedTopics.Any(x => x.Equals(t)))
                     {
-                        if (pair.Value.Any(x => x.Equals(t)))
-                        {
-                            pair.Value.Remove(t);
-                        }
+                        _subscribedTopics.Remove(t);
                     }
                 }
             }
@@ -83,13 +71,9 @@ namespace WebSocketWrapperLib
 
         public void UnsubscribeAll()
         {
-            lock (SubTopicsRegistry)
+            lock (_subscribedTopics)
             {
-                var pair = SubTopicsRegistry.SingleOrDefault(x => x.Key.Equals(ID));
-                if (!pair.Equals(default(KeyValuePair<string, List<string>>)))
-                {
-                    SubTopicsRegistry.Remove(ID);
-                }
+                _subscribedTopics.Clear();
             }
         }
 
@@ -103,27 +87,19 @@ namespace WebSocketWrapperLib
 
         protected void InternalPublish(string topic, byte[] data)
         {
-            IEnumerable<string> subSessionIds = null;
-            lock (SubTopicsRegistry)
+            var sessions =
+                Sessions.Sessions.Cast<WebSocketBehaviorEx>()
+                    .Where(x => x.SubscribedTopics.Any(y => y.Equals(topic)))
+                    .ToList();
+            foreach (var session in sessions)
             {
-                subSessionIds =
-                    SubTopicsRegistry.Where(x => x.Value.Any(t => t.Equals(topic)))
-                        .Select(x => x.Key)
-                        .ToList();
-            }
-            if (subSessionIds != null && subSessionIds.Any())
-            {
-                var sessions = Sessions.Sessions.Where(x => subSessionIds.Any(i => i.Equals(x.ID))).ToList();
-                foreach (var session in sessions)
+                try
                 {
-                    try
-                    {
-                        session.Context.WebSocket.Send(new PublishMessage(topic, data).ToBytes());
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
+                    session.Context.WebSocket.Send(new PublishMessage(topic, data).ToBytes());
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(string.Format("Internal publish failed: " + ex.Message));
                 }
             }
         }

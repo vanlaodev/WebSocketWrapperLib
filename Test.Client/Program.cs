@@ -16,7 +16,7 @@ namespace Test.Client
         static void Main(string[] args)
         {
             WebSocketWrapper.Setup(new JsonObjectSerializer());
-            using (var wsClient = new WebSocketClient("ws://localhost:4579"))
+            using (var wsClient = new WebSocketClient("ws://localhost:6234"))
             {
                 wsClient.RegisterRpcContractImpl<IClientContract, ClientContractImpl>(new ClientContractImpl());
                 _chatServerApi = wsClient.GenerateContractWrapper<IChatServerContract>(2 * 60 * 1000);

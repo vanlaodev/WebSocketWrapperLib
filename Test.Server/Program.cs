@@ -10,7 +10,7 @@ namespace Test.Server
         static void Main(string[] args)
         {
             WebSocketWrapper.Setup(new JsonObjectSerializer());
-            var wssv = new WebSocketServer(4579);
+            var wssv = new WebSocketServer(6234);
             wssv.AddWebSocketService<ChatWebSocketService>("/");
             wssv.Start();
             Console.WriteLine("Started.");

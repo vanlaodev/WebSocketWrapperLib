@@ -37,7 +37,8 @@ namespace WebSocketWrapperLib
             }
         }
 
-        internal static bool OnMessage(WebSocket ws, MessageEventArgs e, Action<Message> messageReceived, Func<string, object> contractFinder)
+        internal static bool OnMessage(WebSocket ws, MessageEventArgs e, Action<Message> messageReceived,
+            Func<string, object> contractFinder)
         {
             if (e.IsBinary)
             {
@@ -54,40 +55,40 @@ namespace WebSocketWrapperLib
                 {
                     if (string.IsNullOrEmpty(msg.ReplyId))
                     {
-/*                        Task.Run(() =>
-                        {*/
-                            try
+                        /*                        Task.Run(() =>
+                                                {*/
+                        try
+                        {
+                            if (msg.Type.Equals(RpcRequestMessage.MsgType))
                             {
-                                if (msg.Type.Equals(RpcRequestMessage.MsgType))
+                                HandleRpcRequest(ws, msg, contractFinder);
+                            }
+                            else
+                            {
+                                if (messageReceived != null)
                                 {
-                                    HandleRpcRequest(ws, msg, contractFinder);
+                                    messageReceived(msg);
                                 }
-                                else
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            if (msg.RequireReply)
+                            {
+                                ws.Send(new ErrorMessage(msg.Id)
                                 {
-                                    if (messageReceived != null)
+                                    Error = new ErrorMessage.ErrorInfo()
                                     {
-                                        messageReceived(msg);
+                                        Message = ex.GetInnermostException().Message
                                     }
-                                }
+                                }.ToBytes());
                             }
-                            catch (Exception ex)
+                            else
                             {
-                                if (msg.RequireReply)
-                                {
-                                    ws.Send(new ErrorMessage(msg.Id)
-                                    {
-                                        Error = new ErrorMessage.ErrorInfo()
-                                        {
-                                            Message = ex.Message
-                                        }
-                                    }.ToBytes());
-                                }
-                                else
-                                {
-                                    throw;
-                                }
+                                throw;
                             }
-//                        });
+                        }
+                        //                        });
                     }
                     else
                     {

@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ErrorMessage.cs" />
+    <Compile Include="Ext.cs" />
     <Compile Include="IObjectSerializer.cs" />
     <Compile Include="IPubSubContract.cs" />
     <Compile Include="Message.cs" />
