@@ -13,6 +13,22 @@ namespace WebSocketWrapperLib
         private static readonly Dictionary<string, object> Locks = new Dictionary<string, object>();
         private static readonly Dictionary<string, Message> Responses = new Dictionary<string, Message>();
 
+        internal static void CancelAll()
+        {
+            IEnumerable<object> locks;
+            lock (Locks)
+            {
+                locks = Locks.Values;
+            }
+            foreach (var l in locks)
+            {
+                lock (l)
+                {
+                    Monitor.Pulse(l);
+                }
+            }
+        }
+
         internal static void OnResponse(Message message)
         {
             var msgReplyId = message.ReplyId;

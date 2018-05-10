@@ -39,6 +39,8 @@ namespace WebSocketWrapperLib
             UnsubscribeAll();
 
             base.OnClose(e);
+
+            RequestResponseBehaviorCoordinator.CancelAll();
         }
 
         public void Subscribe(string[] topics)

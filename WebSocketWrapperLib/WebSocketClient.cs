@@ -66,6 +66,8 @@ namespace WebSocketWrapperLib
 
         private void OnOnClose(object sender, CloseEventArgs closeEventArgs)
         {
+            RequestResponseBehaviorCoordinator.CancelAll();
+
             if (AutoReconnect)
             {
                 StartAutoReconnectWorker();
