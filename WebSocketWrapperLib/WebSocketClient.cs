@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using WebSocketSharp;
 
 namespace WebSocketWrapperLib
@@ -15,6 +16,7 @@ namespace WebSocketWrapperLib
         private volatile bool _autoReconnectWorkerEnabled;
         private readonly object _lockForAutoReconnectWorkerInterval = new object();
         private readonly object _lockForStartStopAutoReconnectWorker = new object();
+        private readonly ManualResetEventSlim _reconnectWaitHandle = new ManualResetEventSlim(false);
 
         public event Action<Message> MessageReceived;
         public event Action OnReconnecting;
@@ -27,13 +29,13 @@ namespace WebSocketWrapperLib
 
             AutoReconnect = true;
             ReconnectBackOffMultiplier = 2;
-            InitialReconnectInterval = 5 * 1000;
+            ReconnectInterval = 5 * 1000;
             MaxReconnectInterval = 3 * 60 * 1000;
         }
 
         public bool AutoReconnect { get; set; }
         public int ReconnectBackOffMultiplier { get; set; }
-        public int InitialReconnectInterval { get; set; }
+        public int ReconnectInterval { get; set; }
         public int MaxReconnectInterval { get; set; }
 
         private void OnOnMessage(object sender, MessageEventArgs e)
@@ -54,6 +56,7 @@ namespace WebSocketWrapperLib
                 _autoReconnectWorkerEnabled = false;
                 if (_autoReconnectWorker != null)
                 {
+                    _reconnectWaitHandle.Set();
                     lock (_lockForAutoReconnectWorkerInterval)
                     {
                         Monitor.Pulse(_lockForAutoReconnectWorkerInterval);
@@ -80,7 +83,7 @@ namespace WebSocketWrapperLib
             {
                 if (_autoReconnectWorkerEnabled) return;
                 _autoReconnectWorkerEnabled = true;
-                _reconnectInterval = InitialReconnectInterval < 1000 ? 1000 : InitialReconnectInterval;
+                _reconnectInterval = ReconnectInterval < 1000 ? 1000 : ReconnectInterval;
                 _autoReconnectWorker = new Thread(() =>
                 {
                     while (_autoReconnectWorkerEnabled && ReadyState != WebSocketState.Open)
@@ -92,12 +95,28 @@ namespace WebSocketWrapperLib
                             {
                                 onReconnecting();
                             }
-                            Connect();
+                            _reconnectWaitHandle.Reset();
+                            Task.Run(() =>
+                            {
+                                try
+                                {
+                                    Connect();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.Error("Error occured while reconnecting: " + ex);
+                                }
+                                finally
+                                {
+                                    _reconnectWaitHandle.Set();
+                                }
+                            });
                         }
                         catch (Exception ex)
                         {
-                            Log.Error("Error occured while reconnecting: " + ex.Message);
+                            Log.Error("Error occured while reconnecting: " + ex);
                         }
+                        _reconnectWaitHandle.Wait();
                         if (ReadyState != WebSocketState.Open)
                         {
                             lock (_lockForAutoReconnectWorkerInterval)
