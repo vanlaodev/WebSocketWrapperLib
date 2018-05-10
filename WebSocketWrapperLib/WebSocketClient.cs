@@ -80,7 +80,7 @@ namespace WebSocketWrapperLib
             {
                 if (_autoReconnectWorkerEnabled) return;
                 _autoReconnectWorkerEnabled = true;
-                _reconnectInterval = InitialReconnectInterval < 0 ? 5 * 1000 : InitialReconnectInterval;
+                _reconnectInterval = InitialReconnectInterval < 1000 ? 1000 : InitialReconnectInterval;
                 _autoReconnectWorker = new Thread(() =>
                 {
                     while (_autoReconnectWorkerEnabled && ReadyState != WebSocketState.Open)
@@ -92,7 +92,14 @@ namespace WebSocketWrapperLib
                             {
                                 onReconnecting();
                             }
-                            ConnectAsync();
+                            try
+                            {
+                                Connect();
+                            }
+                            catch
+                            {
+                                // ignored
+                            }
                             if (ReadyState != WebSocketState.Open)
                             {
                                 lock (_lockForAutoReconnectWorkerInterval)
@@ -100,9 +107,13 @@ namespace WebSocketWrapperLib
                                     if (_autoReconnectWorkerEnabled)
                                     {
                                         Monitor.Wait(_lockForAutoReconnectWorkerInterval, _reconnectInterval);
-                                        if (_reconnectInterval * ReconnectBackOffMultiplier <= MaxReconnectInterval)
+                                        if (_reconnectInterval * ReconnectBackOffMultiplier < MaxReconnectInterval)
                                         {
-                                            _reconnectInterval = _reconnectInterval * ReconnectBackOffMultiplier;
+                                            _reconnectInterval *= ReconnectBackOffMultiplier;
+                                        }
+                                        else
+                                        {
+                                            _reconnectInterval = MaxReconnectInterval;
                                         }
                                     }
                                 }
