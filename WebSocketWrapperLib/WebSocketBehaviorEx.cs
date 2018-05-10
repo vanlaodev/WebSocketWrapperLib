@@ -11,8 +11,6 @@ namespace WebSocketWrapperLib
     {
         private static readonly Dictionary<string, List<string>> SubTopicsRegistry = new Dictionary<string, List<string>>();
 
-        public int ThreadId { get; private set; }
-
         protected override void OnMessage(MessageEventArgs e)
         {
             RequestResponseBehaviorCoordinator.OnMessage(Context.WebSocket, e, OnMessage, s => this);
@@ -26,8 +24,6 @@ namespace WebSocketWrapperLib
         protected override void OnOpen()
         {
             base.OnOpen();
-
-            ThreadId = Thread.CurrentThread.ManagedThreadId;
 
             lock (SubTopicsRegistry)
             {
