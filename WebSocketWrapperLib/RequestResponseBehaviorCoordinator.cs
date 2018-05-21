@@ -54,7 +54,7 @@ namespace WebSocketWrapperLib
         }
 
         internal static bool OnMessage(WebSocket ws, MessageEventArgs e, Action<Message> messageReceived,
-            Func<string, object> contractFinder)
+            Func<string, object> contractFinder, Action<Exception> onError)
         {
             if (e.IsBinary)
             {
@@ -89,6 +89,18 @@ namespace WebSocketWrapperLib
                         }
                         catch (Exception ex)
                         {
+                            if (onError != null)
+                            {
+                                try
+                                {
+                                    onError(ex);
+                                }
+                                catch
+                                {
+                                    // ignored
+                                }
+                            }
+
                             if (msg.RequireReply)
                             {
                                 ws.Send(new ErrorMessage(msg.Id)

@@ -26,7 +26,12 @@ namespace WebSocketWrapperLib
 
         protected override void OnMessage(MessageEventArgs e)
         {
-            RequestResponseBehaviorCoordinator.OnMessage(Context.WebSocket, e, OnMessage, s => this);
+            RequestResponseBehaviorCoordinator.OnMessage(Context.WebSocket, e, OnMessage, s => this, OnHandleMessageError);
+        }
+
+        protected virtual void OnHandleMessageError(Exception obj)
+        {
+            
         }
 
         protected virtual void OnMessage(Message msg)
