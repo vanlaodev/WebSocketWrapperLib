@@ -24,7 +24,7 @@ namespace WebSocketWrapperLib
             {
                 return serviceHost.Sessions.Sessions.Cast<T>().ToList();
             }
-            return null;
+            return new List<T>();
         }
     }
 }
