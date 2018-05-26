@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using WebSocketSharp.Server;
 
 namespace WebSocketWrapperLib
 {
-    internal static class Ext
+    public static class Ext
     {
-        public static Exception GetInnermostException(this Exception exception)
+        internal static Exception GetInnermostException(this Exception exception)
         {
             var ex = exception;
             while (ex.InnerException != null)
@@ -12,6 +15,16 @@ namespace WebSocketWrapperLib
                 ex = ex.InnerException;
             }
             return ex;
+        }
+
+        public static IEnumerable<T> GetSessions<T>(this WebSocketServer wssv, string path) where T : IWebSocketSession
+        {
+            WebSocketServiceHost serviceHost;
+            if (wssv.WebSocketServices.TryGetServiceHost(path, out serviceHost))
+            {
+                return serviceHost.Sessions.Sessions.Cast<T>().ToList();
+            }
+            return new List<T>();
         }
     }
 }
