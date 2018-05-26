@@ -11,28 +11,56 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Client", "Test.Client\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Common", "Test.Common\Test.Common.csproj", "{43AF50B7-CF62-4FD7-A3AE-C176DAA16AD9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "websocket-sharp", "submodules\websocket-sharp\websocket-sharp\websocket-sharp.csproj", "{B357BAC7-529E-4D81-A0D2-71041B19C8DE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug_Ubuntu|Any CPU = Debug_Ubuntu|Any CPU
 		Debug|Any CPU = Debug|Any CPU
+		Release_Ubuntu|Any CPU = Release_Ubuntu|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9909BAD8-86E9-4ADB-B555-13E51D1CBFBA}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{9909BAD8-86E9-4ADB-B555-13E51D1CBFBA}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
 		{9909BAD8-86E9-4ADB-B555-13E51D1CBFBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9909BAD8-86E9-4ADB-B555-13E51D1CBFBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9909BAD8-86E9-4ADB-B555-13E51D1CBFBA}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{9909BAD8-86E9-4ADB-B555-13E51D1CBFBA}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
 		{9909BAD8-86E9-4ADB-B555-13E51D1CBFBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9909BAD8-86E9-4ADB-B555-13E51D1CBFBA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{257E6867-2ADA-476E-9AFE-1B8CDE6D8560}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{257E6867-2ADA-476E-9AFE-1B8CDE6D8560}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
 		{257E6867-2ADA-476E-9AFE-1B8CDE6D8560}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{257E6867-2ADA-476E-9AFE-1B8CDE6D8560}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{257E6867-2ADA-476E-9AFE-1B8CDE6D8560}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{257E6867-2ADA-476E-9AFE-1B8CDE6D8560}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
 		{257E6867-2ADA-476E-9AFE-1B8CDE6D8560}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{257E6867-2ADA-476E-9AFE-1B8CDE6D8560}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB671186-0751-4847-8C51-38B4BAE8E49D}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB671186-0751-4847-8C51-38B4BAE8E49D}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
 		{AB671186-0751-4847-8C51-38B4BAE8E49D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AB671186-0751-4847-8C51-38B4BAE8E49D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB671186-0751-4847-8C51-38B4BAE8E49D}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{AB671186-0751-4847-8C51-38B4BAE8E49D}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
 		{AB671186-0751-4847-8C51-38B4BAE8E49D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AB671186-0751-4847-8C51-38B4BAE8E49D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43AF50B7-CF62-4FD7-A3AE-C176DAA16AD9}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{43AF50B7-CF62-4FD7-A3AE-C176DAA16AD9}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
 		{43AF50B7-CF62-4FD7-A3AE-C176DAA16AD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{43AF50B7-CF62-4FD7-A3AE-C176DAA16AD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43AF50B7-CF62-4FD7-A3AE-C176DAA16AD9}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{43AF50B7-CF62-4FD7-A3AE-C176DAA16AD9}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
 		{43AF50B7-CF62-4FD7-A3AE-C176DAA16AD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43AF50B7-CF62-4FD7-A3AE-C176DAA16AD9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B357BAC7-529E-4D81-A0D2-71041B19C8DE}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug_Ubuntu|Any CPU
+		{B357BAC7-529E-4D81-A0D2-71041B19C8DE}.Debug_Ubuntu|Any CPU.Build.0 = Debug_Ubuntu|Any CPU
+		{B357BAC7-529E-4D81-A0D2-71041B19C8DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B357BAC7-529E-4D81-A0D2-71041B19C8DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B357BAC7-529E-4D81-A0D2-71041B19C8DE}.Release_Ubuntu|Any CPU.ActiveCfg = Release_Ubuntu|Any CPU
+		{B357BAC7-529E-4D81-A0D2-71041B19C8DE}.Release_Ubuntu|Any CPU.Build.0 = Release_Ubuntu|Any CPU
+		{B357BAC7-529E-4D81-A0D2-71041B19C8DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B357BAC7-529E-4D81-A0D2-71041B19C8DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
