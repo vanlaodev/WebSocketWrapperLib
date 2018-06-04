@@ -34,12 +34,16 @@ namespace {ns}
             info.Contract = ""{interfaceNm}"";
             info.Method = ""{methodName}"";
             {methodSetParamsSection}
+            {methodSetParamTypesSection}
             var result = _wrapped(info);
             {methodReturnStatement}
         }";
 
         private const string MethodSetParamStatementTemplate =
             @"            info.Parameters.Add({paramVal});";
+
+        private const string MethodSetParamTypeStatementTemplate =
+            @"            info.ParameterTypes.Add({paramType});";
 
         private const string MethodReturnStatementTemplate = @"return ({returnType})result;";
 
@@ -53,25 +57,32 @@ namespace {ns}
                 var prefix = Prefix.Replace("{ns}", ns).Replace("{classNm}", classNm).Replace("{interfaceNm}", contractType.FullName);
                 var methods = string.Join(Environment.NewLine + Environment.NewLine,
                     contractType.GetMethods().Concat(contractType.GetInterfaces().SelectMany(i => i.GetMethods())).Select(m =>
-                      {
-                          var methodParams = string.Join(",",
-                              m.GetParameters().Select(p => string.Format("{0} {1}", p.ParameterType.FullName, p.Name)));
-                          var methodSetParamsSection = string.Join(Environment.NewLine,
-                              m.GetParameters()
-                                  .Select(
-                                      p =>
-                                          MethodSetParamStatementTemplate.Replace("{paramVal}", p.Name)));
-                          var methodReturnStatement = typeof(void) == m.ReturnType
-                              ? ""
-                              : MethodReturnStatementTemplate.Replace("{returnType}", m.ReturnType.FullName);
-                          return MethodTemplate.Replace("{returnType}", m.ReturnType.FullName)
-                              .Replace("{methodName}", m.Name)
-                              .Replace("{methodParams}", methodParams)
-                              .Replace("{interfaceNm}", contractType.FullName)
-                              .Replace("{methodSetParamsSection}", methodSetParamsSection)
-                              .Replace("{methodReturnStatement}", methodReturnStatement)
-                              .Replace("System.Void", "void");
-                      }));
+                    {
+                        var parameterInfos = m.GetParameters();
+                        var methodParams = string.Join(",",
+                            parameterInfos.Select(p => string.Format("{0} {1}", p.ParameterType.FullName, p.Name)));
+                        var methodSetParamsSection = string.Join(Environment.NewLine,
+                            parameterInfos
+                                .Select(
+                                    p =>
+                                        MethodSetParamStatementTemplate.Replace("{paramVal}", p.Name)));
+                        var methodSetParamTypesSection = string.Join(Environment.NewLine,
+                            parameterInfos
+                                .Select(
+                                    p =>
+                                        MethodSetParamTypeStatementTemplate.Replace("{paramType}", string.Format("\"{0}\"", p.ParameterType.FullName))));
+                        var methodReturnStatement = typeof(void) == m.ReturnType
+                            ? ""
+                            : MethodReturnStatementTemplate.Replace("{returnType}", m.ReturnType.FullName);
+                        return MethodTemplate.Replace("{returnType}", m.ReturnType.FullName)
+                            .Replace("{methodName}", m.Name)
+                            .Replace("{methodParams}", methodParams)
+                            .Replace("{interfaceNm}", contractType.FullName)
+                            .Replace("{methodSetParamsSection}", methodSetParamsSection)
+                            .Replace("{methodSetParamTypesSection}", methodSetParamTypesSection)
+                            .Replace("{methodReturnStatement}", methodReturnStatement)
+                            .Replace("System.Void", "void");
+                    }));
                 var code = prefix + methods + Suffix;
                 var provider = new CSharpCodeProvider();
                 var cp = new CompilerParameters();
@@ -94,10 +105,12 @@ namespace {ns}
             public string Contract { get; set; }
             public string Method { get; set; }
             public List<object> Parameters { get; set; }
+            public List<string> ParameterTypes { get; set; }
 
             public InvocationInfo()
             {
                 Parameters = new List<object>();
+                ParameterTypes = new List<string>();
             }
         }
 
@@ -111,9 +124,9 @@ namespace {ns}
                     {
                         Contract = info.Contract,
                         Method = info.Method,
-                        Parameters = info.Parameters.Select(p =>
+                        Parameters = info.Parameters.Select((p, i) =>
                         {
-                            var parameterType = p.GetType();
+                            var parameterType = Type.GetType(info.ParameterTypes[i]);
                             return new RpcRequestMessage.ParameterInfo()
                             {
                                 Type = parameterType.AssemblyQualifiedName,
