@@ -70,7 +70,7 @@ namespace {ns}
                             parameterInfos
                                 .Select(
                                     p =>
-                                        MethodSetParamTypeStatementTemplate.Replace("{paramType}", string.Format("\"{0}\"", p.ParameterType.FullName))));
+                                        MethodSetParamTypeStatementTemplate.Replace("{paramType}", string.Format("\"{0}\"", p.ParameterType.AssemblyQualifiedName))));
                         var methodReturnStatement = typeof(void) == m.ReturnType
                             ? ""
                             : MethodReturnStatementTemplate.Replace("{returnType}", m.ReturnType.FullName);
