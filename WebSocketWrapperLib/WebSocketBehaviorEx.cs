@@ -92,7 +92,7 @@ namespace WebSocketWrapperLib
             });
         }
 
-        protected void InternalPublish(string topic, byte[] data)
+        protected virtual void InternalPublish(string topic, byte[] data)
         {
             var sessions =
                 Sessions.Sessions.Cast<WebSocketBehaviorEx>()
@@ -106,7 +106,7 @@ namespace WebSocketWrapperLib
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(string.Format("Internal publish failed: " + ex.Message));
+                    Log.Error(string.Format("Internal publish failed for session '{0}': {1}", session.ID, ex.Message));
                 }
             }
         }
