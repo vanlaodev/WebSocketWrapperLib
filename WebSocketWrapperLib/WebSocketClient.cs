@@ -17,6 +17,7 @@ namespace WebSocketWrapperLib
         private readonly object _lockForAutoReconnectWorkerInterval = new object();
         private readonly object _lockForStartStopAutoReconnectWorker = new object();
         private readonly ManualResetEventSlim _reconnectWaitHandle = new ManualResetEventSlim(false);
+        private readonly RequestResponseBehaviorCoordinator _requestResponseBehaviorCoordinator;
 
         public event Action<Message> MessageReceived;
         public event Action OnReconnecting;
@@ -31,6 +32,13 @@ namespace WebSocketWrapperLib
             ReconnectBackOffMultiplier = 2;
             ReconnectInterval = 5 * 1000;
             MaxReconnectInterval = 3 * 60 * 1000;
+
+            _requestResponseBehaviorCoordinator = new RequestResponseBehaviorCoordinator();
+        }
+
+        public RequestResponseBehaviorCoordinator RequestResponseBehaviorCoordinator
+        {
+            get { return _requestResponseBehaviorCoordinator; }
         }
 
         public bool AutoReconnect { get; set; }
@@ -41,7 +49,7 @@ namespace WebSocketWrapperLib
         private void OnOnMessage(object sender, MessageEventArgs e)
         {
             var callback = MessageReceived;
-            RequestResponseBehaviorCoordinator.OnMessage(this, e, callback, ResolveRpcContractImpl, OnHandleMessageError);
+            _requestResponseBehaviorCoordinator.OnMessage(this, e, callback, ResolveRpcContractImpl, OnHandleMessageError);
         }
 
         protected virtual void OnHandleMessageError(Exception obj)
@@ -74,7 +82,7 @@ namespace WebSocketWrapperLib
 
         private void OnOnClose(object sender, CloseEventArgs closeEventArgs)
         {
-            RequestResponseBehaviorCoordinator.CancelAll();
+            _requestResponseBehaviorCoordinator.CancelAll();
 
             if (AutoReconnect)
             {

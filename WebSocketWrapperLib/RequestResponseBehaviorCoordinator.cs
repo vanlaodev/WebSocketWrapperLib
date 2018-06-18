@@ -8,17 +8,17 @@ using WebSocketSharp;
 
 namespace WebSocketWrapperLib
 {
-    internal static class RequestResponseBehaviorCoordinator
+    public class RequestResponseBehaviorCoordinator
     {
-        private static readonly Dictionary<string, object> Locks = new Dictionary<string, object>();
-        private static readonly Dictionary<string, Message> Responses = new Dictionary<string, Message>();
+        private readonly Dictionary<string, object> _locks = new Dictionary<string, object>();
+        private readonly Dictionary<string, Message> _responses = new Dictionary<string, Message>();
 
-        internal static void CancelAll()
+        internal void CancelAll()
         {
             IEnumerable<object> locks;
-            lock (Locks)
+            lock (_locks)
             {
-                locks = Locks.Values;
+                locks = _locks.Values;
             }
             foreach (var l in locks)
             {
@@ -29,23 +29,23 @@ namespace WebSocketWrapperLib
             }
         }
 
-        internal static void OnResponse(Message message)
+        internal void OnResponse(Message message)
         {
             var msgReplyId = message.ReplyId;
             if (!string.IsNullOrEmpty(msgReplyId))
             {
                 object l;
-                lock (Locks)
+                lock (_locks)
                 {
-                    l = Locks.ContainsKey(msgReplyId) ? Locks[msgReplyId] : null;
+                    l = _locks.ContainsKey(msgReplyId) ? _locks[msgReplyId] : null;
                 }
                 if (l != null)
                 {
                     lock (l)
                     {
-                        lock (Responses)
+                        lock (_responses)
                         {
-                            Responses[msgReplyId] = message;
+                            _responses[msgReplyId] = message;
                         }
                         Monitor.Pulse(l);
                     }
@@ -53,7 +53,7 @@ namespace WebSocketWrapperLib
             }
         }
 
-        internal static bool OnMessage(WebSocket ws, MessageEventArgs e, Action<Message> messageReceived,
+        internal bool OnMessage(WebSocket ws, MessageEventArgs e, Action<Message> messageReceived,
             Func<string, object> contractFinder, Action<Exception> onError)
         {
             if (e.IsBinary)
@@ -128,7 +128,7 @@ namespace WebSocketWrapperLib
             return false;
         }
 
-        private static void HandleRpcRequest(WebSocket ws, Message msg, Func<string, object> rpcTarget)
+        private void HandleRpcRequest(WebSocket ws, Message msg, Func<string, object> rpcTarget)
         {
             var cachedTypes = new Dictionary<string, Type>();
             var rpcRequestMsg = new RpcRequestMessage(msg);
@@ -166,19 +166,19 @@ namespace WebSocketWrapperLib
             }.ToBytes());
         }
 
-        public static T Request<T>(this WebSocket ws, Message req, int timeout) where T : Message
+/*        public T Request<T>(this WebSocket ws, Message req, int timeout) where T : Message
         {
             return Coordinate<T>(() => ws.Send(req.ToBytes()), req, timeout);
-        }
+        }*/
 
-        private static T Coordinate<T>(Action send, Message req, int timeout) where T : Message
+        public T Coordinate<T>(Action send, Message req, int timeout) where T : Message
         {
             req.RequireReply = true;
             var msgId = req.Id;
             var l = new object();
-            lock (Locks)
+            lock (_locks)
             {
-                Locks[msgId] = l;
+                _locks[msgId] = l;
             }
             try
             {
@@ -186,9 +186,9 @@ namespace WebSocketWrapperLib
                 bool signaled;
                 lock (l)
                 {
-                    lock (Responses)
+                    lock (_responses)
                     {
-                        if (Responses.ContainsKey(msgId))
+                        if (_responses.ContainsKey(msgId))
                         {
                             return HandleResponse<T>(msgId);
                         }
@@ -197,9 +197,9 @@ namespace WebSocketWrapperLib
                 }
                 if (signaled)
                 {
-                    lock (Responses)
+                    lock (_responses)
                     {
-                        if (Responses.ContainsKey(msgId))
+                        if (_responses.ContainsKey(msgId))
                         {
                             return HandleResponse<T>(msgId);
                         }
@@ -210,20 +210,20 @@ namespace WebSocketWrapperLib
             }
             finally
             {
-                lock (Locks)
+                lock (_locks)
                 {
-                    Locks.Remove(msgId);
+                    _locks.Remove(msgId);
                 }
-                lock (Responses)
+                lock (_responses)
                 {
-                    Responses.Remove(msgId);
+                    _responses.Remove(msgId);
                 }
             }
         }
 
-        private static T HandleResponse<T>(string msgId) where T : Message
+        private T HandleResponse<T>(string msgId) where T : Message
         {
-            var resp = Responses[msgId];
+            var resp = _responses[msgId];
             if (resp.Type.Equals(ErrorMessage.MsgType))
             {
                 var errMsg = new ErrorMessage(resp);

@@ -12,6 +12,17 @@ namespace WebSocketWrapperLib
     public abstract class WebSocketBehaviorEx : WebSocketBehavior, IPubSubContract
     {
         private readonly List<string> _subscribedTopics = new List<string>();
+        private readonly RequestResponseBehaviorCoordinator _requestResponseBehaviorCoordinator;
+
+        protected WebSocketBehaviorEx()
+        {
+            _requestResponseBehaviorCoordinator = new RequestResponseBehaviorCoordinator();
+        }
+
+        public RequestResponseBehaviorCoordinator RequestResponseBehaviorCoordinator
+        {
+            get { return _requestResponseBehaviorCoordinator; }
+        }
 
         public IReadOnlyList<string> SubscribedTopics
         {
@@ -26,12 +37,12 @@ namespace WebSocketWrapperLib
 
         protected override void OnMessage(MessageEventArgs e)
         {
-            RequestResponseBehaviorCoordinator.OnMessage(Context.WebSocket, e, OnMessage, s => this, OnHandleMessageError);
+            _requestResponseBehaviorCoordinator.OnMessage(Context.WebSocket, e, OnMessage, s => this, OnHandleMessageError);
         }
 
         protected virtual void OnHandleMessageError(Exception obj)
         {
-            
+
         }
 
         protected virtual void OnMessage(Message msg)
@@ -45,7 +56,7 @@ namespace WebSocketWrapperLib
 
             base.OnClose(e);
 
-            RequestResponseBehaviorCoordinator.CancelAll();
+            _requestResponseBehaviorCoordinator.CancelAll();
         }
 
         public void Subscribe(string[] topics)

@@ -114,11 +114,11 @@ namespace {ns}
             }
         }
 
-        public static T GenerateContractWrapper<T>(this WebSocket ws, int defaultTimeout)
+        public static T GenerateContractWrapper<T>(this WebSocketClient ws, int defaultTimeout)
         {
             return GenerateGenericContractWrapper<T>(info =>
             {
-                var resp = ws.Request<RpcResponseMessage>(new RpcRequestMessage()
+                var req = new RpcRequestMessage()
                 {
                     Request = new RpcRequestMessage.RpcRequest()
                     {
@@ -134,7 +134,40 @@ namespace {ns}
                             };
                         }).ToList()
                     }
-                }, defaultTimeout);
+                };
+                var resp = ws.RequestResponseBehaviorCoordinator.Coordinate<RpcResponseMessage>(() => ws.Send(req.ToBytes()), req, defaultTimeout);
+                var type = Type.GetType(resp.Response.Type);
+                if (type == typeof(void))
+                {
+                    return null;
+                }
+                if (type.IsValueType) return Convert.ChangeType(resp.Response.Value, type);
+                return WebSocketWrapper.ObjectSerializer.Deserialize((string)resp.Response.Value, type);
+            });
+        }
+
+        public static T GenerateContractWrapper<T>(this WebSocketBehaviorEx webSocketBehavior, int defaultTimeout)
+        {
+            return GenerateGenericContractWrapper<T>(info =>
+            {
+                var req = new RpcRequestMessage()
+                {
+                    Request = new RpcRequestMessage.RpcRequest()
+                    {
+                        Contract = info.Contract,
+                        Method = info.Method,
+                        Parameters = info.Parameters.Select((p, i) =>
+                        {
+                            var parameterType = Type.GetType(info.ParameterTypes[i]);
+                            return new RpcRequestMessage.ParameterInfo()
+                            {
+                                Type = parameterType.AssemblyQualifiedName,
+                                Value = parameterType.IsValueType ? p : WebSocketWrapper.ObjectSerializer.Serialize(p)
+                            };
+                        }).ToList()
+                    }
+                };
+                var resp = webSocketBehavior.RequestResponseBehaviorCoordinator.Coordinate<RpcResponseMessage>(() => webSocketBehavior.Context.WebSocket.Send(req.ToBytes()), req, defaultTimeout);
                 var type = Type.GetType(resp.Response.Type);
                 if (type == typeof(void))
                 {
