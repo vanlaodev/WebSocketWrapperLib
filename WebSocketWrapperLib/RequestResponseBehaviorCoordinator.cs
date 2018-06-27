@@ -190,7 +190,7 @@ namespace WebSocketWrapperLib
                     {
                         if (_responses.ContainsKey(msgId))
                         {
-                            return HandleResponse<T>(msgId);
+                            return HandleResponse<T>(_responses[msgId]);
                         }
                     }
                     signaled = Monitor.Wait(l, timeout);
@@ -201,7 +201,7 @@ namespace WebSocketWrapperLib
                     {
                         if (_responses.ContainsKey(msgId))
                         {
-                            return HandleResponse<T>(msgId);
+                            return HandleResponse<T>(_responses[msgId]);
                         }
                     }
                     throw new OperationCanceledException();
@@ -221,9 +221,8 @@ namespace WebSocketWrapperLib
             }
         }
 
-        private T HandleResponse<T>(string msgId) where T : Message
+        private T HandleResponse<T>(Message resp) where T : Message
         {
-            var resp = _responses[msgId];
             if (resp.Type.Equals(ErrorMessage.MsgType))
             {
                 var errMsg = new ErrorMessage(resp);
