@@ -71,52 +71,52 @@ namespace WebSocketWrapperLib
                 {
                     if (string.IsNullOrEmpty(msg.ReplyId))
                     {
-                        /*                        Task.Run(() =>
-                                                {*/
-                        try
+                        Task.Run(() =>
                         {
-                            if (msg.Type.Equals(RpcRequestMessage.MsgType))
+                            try
                             {
-                                HandleRpcRequest(ws, msg, contractFinder);
-                            }
-                            else
-                            {
-                                if (messageReceived != null)
+                                if (msg.Type.Equals(RpcRequestMessage.MsgType))
                                 {
-                                    messageReceived(msg);
+                                    HandleRpcRequest(ws, msg, contractFinder);
                                 }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            if (onError != null)
-                            {
-                                try
+                                else
                                 {
-                                    onError(ex);
-                                }
-                                catch
-                                {
-                                    // ignored
-                                }
-                            }
-
-                            if (msg.RequireReply)
-                            {
-                                ws.Send(new ErrorMessage(msg.Id)
-                                {
-                                    Error = new ErrorMessage.ErrorInfo()
+                                    if (messageReceived != null)
                                     {
-                                        Message = ex.GetInnermostException().Message
+                                        messageReceived(msg);
                                     }
-                                }.ToBytes());
+                                }
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                throw;
+                                if (onError != null)
+                                {
+                                    try
+                                    {
+                                        onError(ex);
+                                    }
+                                    catch
+                                    {
+                                        // ignored
+                                    }
+                                }
+
+                                if (msg.RequireReply)
+                                {
+                                    ws.Send(new ErrorMessage(msg.Id)
+                                    {
+                                        Error = new ErrorMessage.ErrorInfo()
+                                        {
+                                            Message = ex.GetInnermostException().Message
+                                        }
+                                    }.ToBytes());
+                                }
+                                else
+                                {
+                                    throw;
+                                }
                             }
-                        }
-                        //                        });
+                        });
                     }
                     else
                     {
@@ -166,10 +166,10 @@ namespace WebSocketWrapperLib
             }.ToBytes());
         }
 
-/*        public T Request<T>(this WebSocket ws, Message req, int timeout) where T : Message
-        {
-            return Coordinate<T>(() => ws.Send(req.ToBytes()), req, timeout);
-        }*/
+        /*        public T Request<T>(this WebSocket ws, Message req, int timeout) where T : Message
+                {
+                    return Coordinate<T>(() => ws.Send(req.ToBytes()), req, timeout);
+                }*/
 
         public T Coordinate<T>(Action send, Message req, int timeout) where T : Message
         {
