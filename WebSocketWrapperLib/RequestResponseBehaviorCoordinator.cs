@@ -18,7 +18,7 @@ namespace WebSocketWrapperLib
             IEnumerable<object> locks;
             lock (_locks)
             {
-                locks = _locks.Values;
+                locks = _locks.Values.ToList();
             }
             foreach (var l in locks)
             {
