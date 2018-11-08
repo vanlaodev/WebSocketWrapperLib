@@ -17,6 +17,10 @@ namespace Test.Server
         private static bool _pushingTime;
         private static Thread _pushTimeThread;
 
+        public ChatWebSocketService()
+        {
+        }
+
         private void StartPushTimeIfNeed()
         {
             if (_pushTimeThread != null) return;
