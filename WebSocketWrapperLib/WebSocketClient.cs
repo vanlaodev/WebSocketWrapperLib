@@ -11,12 +11,18 @@ namespace WebSocketWrapperLib
     {
         private readonly Dictionary<string, Func<object>> _registeredRpcContractImpls = new Dictionary<string, Func<object>>();
 
-        private int _reconnectInterval;
+        private double _reconnectInterval;
+        private double _pingPongInterval;
         private Thread _autoReconnectWorker;
+        private Thread _autoPingPongWorker;
         private volatile bool _autoReconnectWorkerEnabled;
+        private volatile bool _autoPingPongWorkerEnabled;
+        private readonly object _lockForAutoPingPongWorkerInterval = new object();
+        private readonly object _lockForStartStopAutoPingPongWorker = new object();
         private readonly object _lockForAutoReconnectWorkerInterval = new object();
         private readonly object _lockForStartStopAutoReconnectWorker = new object();
         private readonly ManualResetEventSlim _reconnectWaitHandle = new ManualResetEventSlim(false);
+        private readonly ManualResetEventSlim _pingPongWaitHandle = new ManualResetEventSlim(false);
         private readonly RequestResponseBehaviorCoordinator _requestResponseBehaviorCoordinator;
 
         public event Action<Message> MessageReceived;
@@ -30,8 +36,11 @@ namespace WebSocketWrapperLib
 
             AutoReconnect = true;
             ReconnectBackOffMultiplier = 2;
-            ReconnectInterval = 5 * 1000;
-            MaxReconnectInterval = 3 * 60 * 1000;
+            ReconnectInterval = TimeSpan.FromSeconds(5);
+            MaxReconnectInterval = TimeSpan.FromMinutes(3);
+
+            AutoPingPong = true;
+            AutoPingPongInterval = TimeSpan.FromMinutes(1);
 
             _requestResponseBehaviorCoordinator = new RequestResponseBehaviorCoordinator();
         }
@@ -41,10 +50,12 @@ namespace WebSocketWrapperLib
             get { return _requestResponseBehaviorCoordinator; }
         }
 
+        public bool AutoPingPong { get; set; }
+        public TimeSpan AutoPingPongInterval { get; set; }
         public bool AutoReconnect { get; set; }
         public int ReconnectBackOffMultiplier { get; set; }
-        public int ReconnectInterval { get; set; }
-        public int MaxReconnectInterval { get; set; }
+        public TimeSpan ReconnectInterval { get; set; }
+        public TimeSpan MaxReconnectInterval { get; set; }
 
         private void OnOnMessage(object sender, MessageEventArgs e)
         {
@@ -60,6 +71,84 @@ namespace WebSocketWrapperLib
         private void OnOnOpen(object sender, EventArgs eventArgs)
         {
             StopAutoReconnectWorker();
+
+            if (AutoPingPong)
+            {
+                StartAutoPingPongWorker();
+            }
+        }
+
+        private void StopAutoPingPongWorker()
+        {
+            lock (_lockForStartStopAutoPingPongWorker)
+            {
+                _autoPingPongWorkerEnabled = false;
+                if (_autoPingPongWorker != null)
+                {
+                    _pingPongWaitHandle.Set();
+                    lock (_lockForAutoPingPongWorkerInterval)
+                    {
+                        Monitor.Pulse(_lockForAutoPingPongWorkerInterval);
+                    }
+                    _autoPingPongWorker.Join();
+                    _autoPingPongWorker = null;
+                }
+            }
+        }
+
+        private void StartAutoPingPongWorker()
+        {
+            lock (_lockForStartStopAutoPingPongWorker)
+            {
+                if (_autoPingPongWorkerEnabled) return;
+                _autoPingPongWorkerEnabled = true;
+                _pingPongInterval = AutoPingPongInterval.TotalMilliseconds < 5000 ? 5000 : AutoPingPongInterval.TotalMilliseconds;
+                _autoPingPongWorker = new Thread(() =>
+                {
+                    while (_autoPingPongWorkerEnabled && ReadyState == WebSocketState.Open)
+                    {
+                        try
+                        {
+                            _pingPongWaitHandle.Reset();
+                            Task.Run(() =>
+                            {
+                                try
+                                {
+                                    if (ReadyState == WebSocketState.Open && !Ping())
+                                    {
+                                        Close(CloseStatusCode.Abnormal);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.Error("Error occured while auto ping-pong: " + ex);
+                                }
+                                finally
+                                {
+                                    _pingPongWaitHandle.Set();
+                                }
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error("Error occured while auto ping-pong: " + ex);
+                        }
+                        _pingPongWaitHandle.Wait();
+                        if (ReadyState == WebSocketState.Open)
+                        {
+                            lock (_lockForAutoPingPongWorkerInterval)
+                            {
+                                if (_autoPingPongWorkerEnabled)
+                                {
+                                    Monitor.Wait(_lockForAutoPingPongWorkerInterval, (int)_pingPongInterval);
+                                }
+                            }
+                        }
+                    }
+                    _autoPingPongWorkerEnabled = false;
+                });
+                _autoPingPongWorker.Start();
+            }
         }
 
         private void StopAutoReconnectWorker()
@@ -84,6 +173,8 @@ namespace WebSocketWrapperLib
         {
             _requestResponseBehaviorCoordinator.CancelAll();
 
+            StopAutoPingPongWorker();
+
             if (AutoReconnect)
             {
                 StartAutoReconnectWorker();
@@ -96,7 +187,7 @@ namespace WebSocketWrapperLib
             {
                 if (_autoReconnectWorkerEnabled) return;
                 _autoReconnectWorkerEnabled = true;
-                _reconnectInterval = ReconnectInterval < 1000 ? 1000 : ReconnectInterval;
+                _reconnectInterval = ReconnectInterval.TotalMilliseconds < 1000 ? 1000 : ReconnectInterval.TotalMilliseconds;
                 _autoReconnectWorker = new Thread(() =>
                 {
                     while (_autoReconnectWorkerEnabled && ReadyState != WebSocketState.Open)
@@ -136,14 +227,14 @@ namespace WebSocketWrapperLib
                             {
                                 if (_autoReconnectWorkerEnabled)
                                 {
-                                    Monitor.Wait(_lockForAutoReconnectWorkerInterval, _reconnectInterval);
-                                    if (_reconnectInterval * ReconnectBackOffMultiplier < MaxReconnectInterval)
+                                    Monitor.Wait(_lockForAutoReconnectWorkerInterval, (int)_reconnectInterval);
+                                    if (_reconnectInterval * ReconnectBackOffMultiplier < MaxReconnectInterval.TotalMilliseconds)
                                     {
                                         _reconnectInterval *= ReconnectBackOffMultiplier;
                                     }
                                     else
                                     {
-                                        _reconnectInterval = MaxReconnectInterval;
+                                        _reconnectInterval = MaxReconnectInterval.TotalMilliseconds;
                                     }
                                 }
                             }

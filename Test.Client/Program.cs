@@ -18,6 +18,9 @@ namespace Test.Client
             WebSocketWrapper.Setup(new JsonObjectSerializer());
             using (var wsClient = new WebSocketClient("ws://localhost:6234"))
             {
+                wsClient.Log.Level = LogLevel.Trace;
+                wsClient.WaitTime = TimeSpan.FromSeconds(5);
+                wsClient.AutoPingPongInterval = TimeSpan.FromSeconds(10);
                 wsClient.RegisterRpcContractImpl<IClientContract, ClientContractImpl>(new ClientContractImpl());
                 _chatServerApi = wsClient.GenerateContractWrapper<IChatServerContract>(2 * 60 * 1000);
                 wsClient.OnOpen += WsClientOnOnOpen;
