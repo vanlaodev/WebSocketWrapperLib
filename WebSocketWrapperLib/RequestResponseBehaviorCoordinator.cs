@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using WebSocketSharp;
@@ -107,6 +108,7 @@ namespace WebSocketWrapperLib
                                     {
                                         Error = new ErrorMessage.ErrorInfo()
                                         {
+                                            ExceptionType = ex.GetType().FullName,
                                             Message = ex.GetInnermostException().Message
                                         }
                                     }.ToBytes());
@@ -154,8 +156,17 @@ namespace WebSocketWrapperLib
                 if (type.IsValueType) return Convert.ChangeType(p.Value, type);
                 return WebSocketWrapper.ObjectSerializer.Deserialize((string)p.Value, type);
             }).ToArray();
-            var result = contractImplType
-                .InvokeMember(req.Method, BindingFlags.InvokeMethod, null, contractImpl, parameters);
+            object result;
+            try
+            {
+                result = contractImplType
+                    .InvokeMember(req.Method, BindingFlags.InvokeMethod, null, contractImpl, parameters);
+            }
+            catch (TargetInvocationException ex)
+            {
+                if (ex.InnerException != null) ExceptionDispatchInfo.Capture(ex.InnerException).Throw(); // unwrap inner exception
+                throw; // rethrow
+            }
             ws.Send(new RpcResponseMessage(msg.Id)
             {
                 Response = new RpcResponseMessage.RpcResponse()
@@ -226,7 +237,7 @@ namespace WebSocketWrapperLib
             if (resp.Type.Equals(ErrorMessage.MsgType))
             {
                 var errMsg = new ErrorMessage(resp);
-                throw new RemoteOperationException(errMsg.Error.Message);
+                throw new RemoteOperationException(errMsg.Error.Message, errMsg.Error.ExceptionType);
             }
             return (T)Activator.CreateInstance(typeof(T), resp);
         }

@@ -4,8 +4,11 @@ namespace WebSocketWrapperLib
 {
     public class RemoteOperationException : Exception
     {
-        public RemoteOperationException(string message) : base(message)
+        public string ExceptionType { get; private set; }
+
+        public RemoteOperationException(string message, string exceptionType) : base(message)
         {
+            ExceptionType = exceptionType;
         }
     }
 }

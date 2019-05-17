@@ -26,6 +26,7 @@ namespace WebSocketWrapperLib
 
         public class ErrorInfo
         {
+            public string ExceptionType { get; set; }
             public string Message { get; set; }
         }
 
