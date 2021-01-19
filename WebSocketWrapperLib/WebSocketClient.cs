@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using WebSocketSharp;
@@ -43,6 +44,11 @@ namespace WebSocketWrapperLib
             AutoPingPongInterval = TimeSpan.FromMinutes(1);
 
             _requestResponseBehaviorCoordinator = new RequestResponseBehaviorCoordinator();
+
+            if (IsSecure)
+            {
+                SslConfiguration.EnabledSslProtocols = SslProtocols.Default;
+            }
         }
 
         public RequestResponseBehaviorCoordinator RequestResponseBehaviorCoordinator
