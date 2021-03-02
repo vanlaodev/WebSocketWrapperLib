@@ -12,7 +12,7 @@ namespace Test.Server
         {
             WebSocketWrapper.Setup(new JsonObjectSerializer());
             var wssv = new WebSocketServer(6234);
-            wssv.WaitTime = TimeSpan.FromSeconds(5);
+            wssv.WaitTime = TimeSpan.FromSeconds(10);
             wssv.Log.Level = LogLevel.Trace;
             wssv.AddWebSocketService<ChatWebSocketService>("/");
             wssv.Start();
