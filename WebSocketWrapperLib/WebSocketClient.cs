@@ -106,7 +106,7 @@ namespace WebSocketWrapperLib
         {
             lock (_lockForStartStopAutoPingPongWorker)
             {
-                if (_autoPingPongWorkerEnabled) return;
+                StopAutoPingPongWorker();
                 _autoPingPongWorkerEnabled = true;
                 _pingPongInterval = AutoPingPongInterval.TotalMilliseconds < 5000 ? 5000 : AutoPingPongInterval.TotalMilliseconds;
                 _autoPingPongWorker = new Thread(() =>
@@ -122,7 +122,8 @@ namespace WebSocketWrapperLib
                                 {
                                     if (ReadyState == WebSocketState.Open && !Ping())
                                     {
-                                        Close(CloseStatusCode.Abnormal);
+                                        //                                        Close(CloseStatusCode.Abnormal, "No pong received after ping.");
+                                        Log.Warn("No pong received after ping.");
                                     }
                                 }
                                 catch (Exception ex)
@@ -191,7 +192,7 @@ namespace WebSocketWrapperLib
         {
             lock (_lockForStartStopAutoReconnectWorker)
             {
-                if (_autoReconnectWorkerEnabled) return;
+                StopAutoReconnectWorker();
                 _autoReconnectWorkerEnabled = true;
                 _reconnectInterval = ReconnectInterval.TotalMilliseconds < 1000 ? 1000 : ReconnectInterval.TotalMilliseconds;
                 _autoReconnectWorker = new Thread(() =>
