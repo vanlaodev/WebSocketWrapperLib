@@ -182,7 +182,7 @@ namespace WebSocketWrapperLib
 
             StopAutoPingPongWorker();
 
-            if (AutoReconnect)
+            if (AutoReconnect && !_autoReconnectWorkerEnabled)
             {
                 StartAutoReconnectWorker();
             }
